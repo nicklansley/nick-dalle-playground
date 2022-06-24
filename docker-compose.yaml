@@ -1,0 +1,60 @@
+version: '3.6'
+
+volumes:
+  app-cache:
+    driver: local
+
+services:
+  dalle-backend:
+    container_name: dalle-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - app-cache:/root/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [ gpu ]
+
+    networks:
+      - dalle-internal-network
+        
+  #dalle-interface:
+  #  container_name: dalle-interface
+  #  build:
+  #    context: ./interface
+  #    dockerfile: Dockerfile
+  ##  restart: always
+   # ports:
+   #   - "3000:3000"
+   # stdin_open: true
+   # tty: true
+   # networks:
+   #   - dalle-internal-network
+  dalle-interface:
+    container_name: dalle-interface
+    build:
+      context: ./simple-interface
+      dockerfile: Dockerfile
+    restart: always
+    stdin_open: true
+    tty: true
+    networks:
+      - dalle-internal-network
+
+
+  dalle-proxy-service:
+    build: './proxyserver'
+    container_name: dalle-proxy
+    restart: always
+    ports:
+      - '8000:80'
+    networks:
+      - dalle-internal-network
+      
+networks:
+  dalle-internal-network:
+    name: dalle-internal-network
