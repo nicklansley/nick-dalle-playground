@@ -21,19 +21,7 @@ services:
 
     networks:
       - dalle-internal-network
-        
-  #dalle-interface:
-  #  container_name: dalle-interface
-  #  build:
-  #    context: ./interface
-  #    dockerfile: Dockerfile
-  ##  restart: always
-   # ports:
-   #   - "3000:3000"
-   # stdin_open: true
-   # tty: true
-   # networks:
-   #   - dalle-internal-network
+
   dalle-interface:
     container_name: dalle-interface
     build:

@@ -1,5 +1,6 @@
 const go = async () =>
 {
+    document.getElementById('buttonGo').innerText = "Processing...";
     document.getElementById('buttonGo').enabled = false;
 
     const data = {
@@ -7,7 +8,6 @@ const go = async () =>
         num_images: parseInt(document.getElementById("num_images").value)
     }
 
-    document.getElementById('status').innerText = "DALL-E Engine Status: Processing...";
     document.getElementById("output").innerText = "";
 
     const rawResponse = await fetch('/dalle', {
@@ -32,58 +32,61 @@ const go = async () =>
             img.height = "500";
             document.getElementById("output").appendChild(img);
         }
-
-        document.getElementById('status').innerText = "DALL-E Engine Status: Ready";
-    }
-    else
+    } else
     {
         document.getElementById('status').innerText = `DALL-E Engine Status: Sorry, an HTTP error ${rawResponse.status} occurred - have another go!`;
     }
-
+    document.getElementById('buttonGo').innerText = "Click to send request";
     document.getElementById('buttonGo').enabled = true;
+    await checkLive();
 }
 
 
 const checkLive = async () =>
 {
     let rawResponse;
-
-    document.getElementById('status').innerText = "DALL-E Engine Status: Checking...";
-
-    try
+    if(!document.getElementById('status').innerText.includes("Sorry"))
     {
-        rawResponse = await fetch('/status', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
-    }
-    catch (e)
-    {
-        document.getElementById('status').innerText = "DALL-E Engine Status: Sorry, service offline";
-        return false;
-    }
+        document.getElementById('status').innerText = "DALL-E Engine Status: ";
 
-    if(rawResponse.status === 200)
-    {
-        const result = await rawResponse.json();
-
-        if(result.success)
+        try
         {
-            document.getElementById('status').innerText = "DALL-E Engine Status: Online and ready";
-            return true;
-        } else
+            rawResponse = await fetch('/status', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+        catch (e)
         {
-            document.getElementById('status').innerText = "DALL-E Engine Status: Online but not yet ready";
+            document.getElementById('status').innerText = "Sorry, service offline";
             return false;
         }
-    }
-    else
-    {
-        document.getElementById('status').innerText = `DALL-E Engine Status: Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
+
+        if(rawResponse.status === 200)
+        {
+            const result = await rawResponse.json();
+
+            if(result.success)
+            {
+                document.getElementById('status').innerText += "Online and ready";
+                return true;
+            } else
+            {
+                document.getElementById('status').innerText = "Online but not yet ready";
+                return false;
+            }
+        } else
+        {
+            document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
+        }
     }
 
 
 }
+setInterval(function ()
+{
+    checkLive().then();
+}, 5000);

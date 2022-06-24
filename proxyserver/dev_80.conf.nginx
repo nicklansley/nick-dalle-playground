@@ -18,13 +18,17 @@ http {
 
     access_log  /var/log/nginx/access.log  main;
 
-    sendfile        on;
-    keepalive_timeout  65;
-
+    sendfile on;
+    keepalive_timeout  300;
+    proxy_read_timeout 300;
+    proxy_connect_timeout 300;
+    proxy_send_timeout 300;
     gzip  on;
 
     server {
         listen 80;
+
+
 
         location /dalle {
             add_header "X-Dalle-Container" "Dalle Backend";
