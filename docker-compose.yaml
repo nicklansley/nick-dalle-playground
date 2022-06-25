@@ -1,9 +1,5 @@
 version: '3.6'
 
-volumes:
-  app-cache:
-    driver: local
-
 services:
   dalle-backend:
     container_name: dalle-backend
@@ -13,6 +9,7 @@ services:
     restart: always
     volumes:
       - app-cache:/root/.cache
+      - library:/library
     deploy:
       resources:
         reservations:
@@ -30,6 +27,9 @@ services:
     restart: always
     stdin_open: true
     tty: true
+    volumes:
+      - library:/app/library
+      - library:/app/dalle-playground/library
     networks:
       - dalle-internal-network
 
@@ -46,3 +46,9 @@ services:
 networks:
   dalle-internal-network:
     name: dalle-internal-network
+
+volumes:
+  library:
+    driver: local
+  app-cache:
+    driver: local

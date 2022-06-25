@@ -1,5 +1,6 @@
 const go = async () =>
 {
+    document.getElementById('status').innerText = "Processing..."
     document.getElementById('buttonGo').innerText = "Processing...";
     document.getElementById('buttonGo').enabled = false;
 
@@ -47,7 +48,6 @@ const checkLive = async () =>
     let rawResponse;
     if(!document.getElementById('status').innerText.includes("Sorry"))
     {
-        document.getElementById('status').innerText = "DALL-E Engine Status: ";
 
         try
         {
@@ -61,7 +61,7 @@ const checkLive = async () =>
         }
         catch (e)
         {
-            document.getElementById('status').innerText = "Sorry, service offline";
+            document.getElementById('status').innerText = "DALL-E Engine Status: Sorry, service offline";
             return false;
         }
 
@@ -71,7 +71,7 @@ const checkLive = async () =>
 
             if(result.success)
             {
-                document.getElementById('status').innerText += "Online and ready";
+                document.getElementById('status').innerText = "DALL-E Engine Status: Online and ready";
                 return true;
             } else
             {
@@ -83,9 +83,8 @@ const checkLive = async () =>
             document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
         }
     }
-
-
 }
+
 setInterval(function ()
 {
     checkLive().then();

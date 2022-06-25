@@ -14,92 +14,100 @@
     html {
         font-family: "Lucida Sans", sans-serif;
     }
+
     img {
-          border: 1px solid #ffffff;
-          padding: 10px;
-          box-shadow: 5px 10px #888888;
+        border: 1px solid #ffffff;
+        padding: 10px;
+        box-shadow: 5px 10px #888888;
     }
 
     .label {
-      color: white;
-      padding: 8px;
+        color: white;
+        padding: 8px;
         background-color: darkslategray;
         width: 700px;
     }
 
     .button-9 {
-      appearance: auto;
-      backface-visibility: hidden;
-      background-color: #888888;
-      border-radius: 6px;
-      border-width: 0;
-      box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
-      box-sizing: border-box;
-      color: #fff;
-      cursor: pointer;
-      font-family: -apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif;
-      font-size: 100%;
-      height: 44px;
-      line-height: 1.15;
-      margin: 12px 0 0;
-      outline: none;
-      overflow: hidden;
-      padding: 0 25px;
-      position: relative;
-      text-align: center;
-      text-transform: none;
-      transform: translateZ(0);
-      transition: all .2s,box-shadow .08s ease-in;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
-      width: 100%;
+        appearance: auto;
+        backface-visibility: hidden;
+        background-color: #888888;
+        border-radius: 6px;
+        border-width: 0;
+        box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset, rgba(50, 50, 93, .1) 0 2px 5px 0, rgba(0, 0, 0, .07) 0 1px 1px 0;
+        box-sizing: border-box;
+        color: #fff;
+        cursor: pointer;
+        font-family: -apple-system, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, sans-serif;
+        font-size: 100%;
+        height: 44px;
+        line-height: 1.15;
+        margin: 12px 0 0;
+        outline: none;
+        overflow: hidden;
+        padding: 0 25px;
+        position: relative;
+        text-align: center;
+        text-transform: none;
+        transform: translateZ(0);
+        transition: all .2s, box-shadow .08s ease-in;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        width: 100%;
     }
 
     .button-9:disabled {
-      cursor: default;
+        cursor: default;
     }
 
     .button-9:focus {
-      box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset, rgba(50, 50, 93, .2) 0 6px 15px 0, rgba(0, 0, 0, .1) 0 2px 2px 0, rgba(50, 151, 211, .3) 0 0 0 4px;
+        box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset, rgba(50, 50, 93, .2) 0 6px 15px 0, rgba(0, 0, 0, .1) 0 2px 2px 0, rgba(50, 151, 211, .3) 0 0 0 4px;
     }
 
 </style>
 <body onload="checkLive()">
-    <h1>Nick's DALL-E Playground</h1>
-        <p class="label" id="status"></p>
+<h1>Nick's DALL-E Playground</h1>
+<p class="label" id="status"></p>
 
-    <table>
+<table>
 
-        <tr>
-            <td>Enter a prompt:</td>
-            <td colspan="2"><input type="text" size="50" id="prompt" /></td>
-        </tr>
+    <tr>
+        <td>Enter a prompt:</td>
+        <td colspan="2"><input type="text" size="50" id="prompt"/></td>
+    </tr>
 
-        <tr>
-            <td>
-                Choose number of images to create:
-            </td>
+    <tr>
+        <td>
+            Choose number of images to create:
+        </td>
 
-            <td>
-                <select id="num_images">
-                    <option selected value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                </select>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <button class="button-9" role="button" id="buttonGo" onclick="go()">Click to send request</button>
-            </td>
-        </tr>
+        <td>
+            <select id="num_images">
+                <option selected value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <button class="button-9" role="button" id="buttonGo" onclick="go()">Click to send request</button>
+        </td>
+    </tr>
 
-    </table>
 
-    <hr />
-    <div id="output" class="container"></div>
+</table>
+
+<hr/>
+<div id="output" class="container"></div>
+<hr/>
+<p>
+<a class="label" href="library.html">See library of images created so far</a>
+&nbsp;
+<a class="label" href="inspiration.html">Get inspired for your prompts</a>
+</p>
 </body>
 </html>

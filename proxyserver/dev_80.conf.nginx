@@ -45,6 +45,16 @@ http {
             proxy_pass http://dalle-interface:3000/dalle-playground/;
         }
 
+      location /library.html {
+            add_header "X-Dalle-Container" "Dalle Frontend";
+            proxy_pass http://dalle-interface:3000/library.html;
+        }
+
+        location ^~ /getlibrary {
+            add_header "X-Dalle-Container" "Dalle Frontend";
+            proxy_pass http://dalle-interface:3000/library/;
+        }
+
         location / {
             add_header "X-Dalle-Container" "Dalle Frontend";
             proxy_pass http://dalle-interface:3000/dalle-playground/;
