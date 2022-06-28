@@ -10,22 +10,24 @@ from PIL import Image
 from dalle_mini import DalleBart, DalleBartProcessor
 from vqgan_jax.modeling_flax_vqgan import VQModel
 
-
 from flax.jax_utils import replicate
 from flax.training.common_utils import shard_prng_key
 
 import wandb
 
-from consts import COND_SCALE, DALLE_COMMIT_ID, DALLE_MODEL_MEGA_FULL, DALLE_MODEL_MEGA, DALLE_MODEL_MINI, GEN_TOP_K, GEN_TOP_P, TEMPERATURE, VQGAN_COMMIT_ID, VQGAN_REPO, ModelSize
+from consts import COND_SCALE, DALLE_COMMIT_ID, DALLE_MODEL_MEGA_FULL, DALLE_MODEL_MEGA, DALLE_MODEL_MINI, GEN_TOP_K, \
+    GEN_TOP_P, TEMPERATURE, VQGAN_COMMIT_ID, VQGAN_REPO, ModelSize
 
-os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform" # https://github.com/saharmor/dalle-playground/issues/14#issuecomment-1147849318
+# https://github.com/saharmor/dalle-playground/issues/14#issuecomment-1147849318
+os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 os.environ["WANDB_SILENT"] = "true"
 wandb.init(anonymous="must")
+
 
 # model inference
 @partial(jax.pmap, axis_name="batch", static_broadcasted_argnums=(3, 4, 5, 6, 7))
 def p_generate(
-    tokenized_prompt, key, params, top_k, top_p, temperature, condition_scale, model
+        tokenized_prompt, key, params, top_k, top_p, temperature, condition_scale, model
 ):
     return model.generate(
         **tokenized_prompt,
@@ -55,8 +57,7 @@ class DalleModel:
         else:
             dalle_model = DALLE_MODEL_MINI
             dtype = jnp.float32
-            
-            
+
         # Load dalle-mini
         self.model, params = DalleBart.from_pretrained(
             dalle_model, revision=DALLE_COMMIT_ID, dtype=dtype, _do_init=False
@@ -72,11 +73,9 @@ class DalleModel:
 
         self.processor = DalleBartProcessor.from_pretrained(dalle_model, revision=DALLE_COMMIT_ID)
 
-
     def tokenize_prompt(self, prompt: str):
         tokenized_prompt = self.processor([prompt])
         return replicate(tokenized_prompt)
-
 
     def generate_images(self, prompt: str, num_predictions: int):
         tokenized_prompt = self.tokenize_prompt(prompt)

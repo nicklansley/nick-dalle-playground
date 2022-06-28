@@ -29,8 +29,8 @@ const go = async () =>
             const img = document.createElement("img");
             img.src = "data:image/png;base64," + base64Image;
             img.alt = data.text;
-            img.width = "500";
-            img.height = "500";
+            img.width = 500;
+            img.height = 500;
             document.getElementById("output").appendChild(img);
         }
     } else

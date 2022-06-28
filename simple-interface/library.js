@@ -1,9 +1,52 @@
+//load naughtywords.txt into naughtyList
+let naughtyList = [];
+const loadNaughtyList = async () =>
+{
+
+    let rawResponse;
+    try
+    {
+         rawResponse = await fetch('/naughtywords.txt', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const words = await rawResponse.text();
+
+        for (const line of words.split('\n'))
+        {
+            naughtyList.push(line.replace("\r", ""));
+        }
+    }
+    catch (e)
+    {
+        document.getElementById('status').innerText = "Sorry, service offline";
+        return false;
+    }
+}
+
+
+const isInNaughtyList = (word) =>
+{
+    for(const naughtyWord of naughtyList)
+    {
+        if(word.includes(naughtyWord))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 const listLibrary = async () =>
 {
     let rawResponse;
 
         document.getElementById('status').innerText = "Reading library...";
-
+        await loadNaughtyList();
         try
         {
             rawResponse = await fetch('/getlibrary', {
@@ -42,7 +85,7 @@ const processListing = async (listing) =>
     {
         let itemLine = listingItem.replace('<a href="', '').replace('</a></li>', '');
         let items = itemLine.split('/">');
-        if(!items[0].includes("<ul>"))
+        if(!items[0].includes("<ul>") && !isInNaughtyList(items[0]))
         {
             let tr = document.createElement('tr');
             let td1 = document.createElement('td');
