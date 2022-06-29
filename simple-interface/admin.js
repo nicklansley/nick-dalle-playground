@@ -26,7 +26,6 @@ const listLibrary = async () =>
     {
         const result = await rawResponse.text();
         await processListing(result);
-        document.getElementById('status').innerText = "Library read! Right-click (or tap and hold) on any image to save a full size version using the browser's save function.";
     } else
     {
         document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
@@ -102,9 +101,15 @@ const showImages = () =>
     let filterOn = false;
     if(document.getElementById('searchText').value.length > 0)
     {
-        filteredLibrary = library.filter(image => image.name.toLowerCase().includes(document.getElementById('searchText').value));
+        filteredLibrary = library;
+        const wordList = document.getElementById('searchText').value.toLowerCase().split(" ");
+        for(const word of wordList)
+        {
+              filteredLibrary = filteredLibrary.filter(image => image.name.toLowerCase().includes(word));
+        }
+
         filterOn = true;
-    }
+}
     else
     {
         filteredLibrary = library;
@@ -146,5 +151,6 @@ const showImages = () =>
     });
     imagesHTML += "</tr></table>";
     document.getElementById('output').innerHTML = imagesHTML;
+    document.getElementById('status').innerText = `${filteredLibrary.length}${filterOn ? " filtered " : " "}images found `;
 
 }
