@@ -98,22 +98,51 @@ const getImages = async (path) =>
 
 const showImages = () =>
 {
+    let filteredLibrary = [];
+    let filterOn = false;
+    if(document.getElementById('searchText').value.length > 0)
+    {
+        filteredLibrary = library.filter(image => image.name.toLowerCase().includes(document.getElementById('searchText').value));
+        filterOn = true;
+    }
+    else
+    {
+        filteredLibrary = library;
+        filterOn = false;
+    }
+
+    let sortedLibrary = filteredLibrary.sort((a, b) => a.folder > b.folder ? 1 : -1);
+
     let previousFolder = "";
-    const sortedLibrary = library.sort((a, b) => a.folder > b.folder ? 1 : -1);
+
 
     let imagesHTML = '<table><tr>';
+    let columnCounter = 0;
     sortedLibrary.forEach((image) =>
     {
-        if (image.folder !== previousFolder)
+        if(filterOn)
         {
-            imagesHTML += '</tr><tr>';
-            imagesHTML += `<td><b>${image.folder}</b></td>`;
-            previousFolder = image.folder;
+            if (columnCounter === 4)
+            {
+                imagesHTML += '</tr><tr>';
+                columnCounter = 0;
+            }
         }
         else
         {
-            imagesHTML += `<td><img height="200", width="200" src="${image.path}" alt="${image.name}"></td>`;
+            if (image.folder !== previousFolder || columnCounter === 4)
+            {
+                imagesHTML += '</tr>';
+                imagesHTML += `<tr><td colspan="9"><hr /><b>${image.folder}</b></td></tr><tr>`;
+                previousFolder = image.folder;
+                columnCounter = 0;
+            }
         }
+
+
+        imagesHTML += `<td><img height="200", width="200" src="${image.path}" alt="${image.name}"></td>`;
+        columnCounter++;
+
     });
     imagesHTML += "</tr></table>";
     document.getElementById('output').innerHTML = imagesHTML;

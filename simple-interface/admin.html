@@ -66,10 +66,15 @@
 </style>
 </head>
 <body onload="listLibrary()">
-    <h1>Nick's DALL-E Playground Library</h1>
-    <h3>Images created by this service so far</h3>
+    <h1>Nick's DALL-E Playground - ADMIN</h1>
+
     <a href="index.html">Go back to prompts page</a>
     <div class="label" id="status"></div>
+
+    <p>
+        <input type="text" id="searchText" size="30">
+        <button  onclick="showImages()">Filter Library</button>
+    </p>
     <div id="output"></div>
 </body>
 </html>
