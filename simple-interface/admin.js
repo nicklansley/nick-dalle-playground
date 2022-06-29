@@ -1,9 +1,8 @@
-let library = [];
+let listingArray = [];
 
 const listLibrary = async () =>
 {
     let rawResponse;
-    library = [];
     document.getElementById('status').innerText = "Reading library...";
 
     try
@@ -24,7 +23,7 @@ const listLibrary = async () =>
 
     if(rawResponse.status === 200)
     {
-        const result = await rawResponse.text();
+        const result = await rawResponse.json();
         await processListing(result);
     } else
     {
@@ -34,21 +33,7 @@ const listLibrary = async () =>
 
 const processListing = async (listing) =>
 {
-
-    listing = listing.replace(listing.substring(0, listing.indexOf("<ul>")), "");
-    listing = listing.replace(listing.substring(listing.indexOf("</ul>")), "");
-
-    const listingData = listing.split("<li>");
-    for (const listingItem of listingData)
-    {
-        let itemLine = listingItem.replace('<a href="', '').replace('</a></li>', '');
-        let items = itemLine.split('/">');
-        if(!items[0].includes("<ul>"))
-        {
-            await getImages(items[1]);
-        }
-    }
-    console.log(JSON.stringify(library, null, 2));
+    listingArray = listing;
     showImages();
 }
 
@@ -98,59 +83,40 @@ const getImages = async (path) =>
 const showImages = () =>
 {
     let filteredLibrary = [];
-    let filterOn = false;
     if(document.getElementById('searchText').value.length > 0)
     {
-        filteredLibrary = library;
+        filteredLibrary = listingArray;
         const wordList = document.getElementById('searchText').value.toLowerCase().split(" ");
         for(const word of wordList)
         {
-              filteredLibrary = filteredLibrary.filter(image => image.name.toLowerCase().includes(word));
+              filteredLibrary = filteredLibrary.filter(image => image.toLowerCase().includes(word));
         }
-
-        filterOn = true;
 }
     else
     {
-        filteredLibrary = library;
-        filterOn = false;
+        filteredLibrary = listingArray;
     }
 
-    let sortedLibrary = filteredLibrary.sort((a, b) => a.folder > b.folder ? 1 : -1);
-
-    let previousFolder = "";
-
+    let sortedLibrary = filteredLibrary.sort((a, b) => a > b ? 1 : -1);
 
     let imagesHTML = '<table><tr>';
     let columnCounter = 0;
     sortedLibrary.forEach((image) =>
     {
-        if(filterOn)
+        if (columnCounter === 4)
         {
-            if (columnCounter === 4)
-            {
-                imagesHTML += '</tr><tr>';
-                columnCounter = 0;
-            }
-        }
-        else
-        {
-            if (image.folder !== previousFolder || columnCounter === 4)
-            {
-                imagesHTML += '</tr>';
-                imagesHTML += `<tr><td colspan="9"><hr /><b>${image.folder}</b></td></tr><tr>`;
-                previousFolder = image.folder;
-                columnCounter = 0;
-            }
+            imagesHTML += '</tr><tr>';
+            columnCounter = 0;
         }
 
-
-        imagesHTML += `<td><img height="200", width="200" src="${image.path}" alt="${image.name}"></td>`;
+        imagesHTML += `<td><img height="200" width="200" src="${image}" alt="${image}"></td>`;
         columnCounter++;
 
     });
     imagesHTML += "</tr></table>";
     document.getElementById('output').innerHTML = imagesHTML;
-    document.getElementById('status').innerText = `${filteredLibrary.length}${filterOn ? " filtered " : " "}images found `;
+    document.getElementById('status').innerText = `${filteredLibrary.length}${document.getElementById('searchText').value.length > 0 ? " filtered " : " "}images found `;
 
 }
+
+setInterval(function () {listLibrary().then()}, 10000);

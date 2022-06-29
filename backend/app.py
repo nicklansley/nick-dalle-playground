@@ -1,6 +1,7 @@
 import argparse
 import base64
 import os
+import json
 from pathlib import Path
 from io import BytesIO
 import time
@@ -35,6 +36,7 @@ def generate_images_api():
     generated_imgs = dalle_model.generate_images(text_prompt, num_images)
 
     save_images_to_library(text_prompt, generated_imgs)
+    create_catalogue()
     generated_images = []
     for idx, img in enumerate(generated_imgs):
         buffered = BytesIO()
@@ -50,6 +52,16 @@ def generate_images_api():
 @cross_origin()
 def health_check():
     return jsonify(success=True)
+
+
+def create_catalogue():
+    library = []
+    for root, dirs, files in os.walk("/library", topdown=False):
+        for name in files:
+            library.append(os.path.join(root, name))
+
+    with open("/library/library.json", "w", encoding="utf8") as outfile:
+        outfile.write(json.dumps(library))
 
 
 def save_images_to_library(text_prompt, generated_imgs):

@@ -52,7 +52,7 @@ http {
 
         location ^~ /getlibrary {
             add_header "X-Dalle-Container" "Dalle Frontend";
-            proxy_pass http://dalle-interface:3000/library/;
+            proxy_pass http://dalle-interface:3000/library/library.json;
         }
 
         location / {
