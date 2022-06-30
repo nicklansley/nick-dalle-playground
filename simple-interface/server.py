@@ -102,7 +102,8 @@ class RelayServer(BaseHTTPRequestHandler):
         library = []
         for root, dirs, files in os.walk("/app/library", topdown=False):
             for name in files:
-                library.append(os.path.join(root, name).replace("/app/library/", "/library/"))
+                if name.endswith('.jpeg'):
+                    library.append(os.path.join(root, name).replace("/app/library/", "/library/"))
 
         with open("/app/library/library.json", "w", encoding="utf8") as outfile:
             outfile.write(json.dumps(library))

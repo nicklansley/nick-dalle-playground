@@ -2,7 +2,7 @@ import argparse
 import base64
 import os
 import json
-from pathlib import Path
+import uuid
 from io import BytesIO
 import time
 
@@ -58,7 +58,8 @@ def create_catalogue():
     library = []
     for root, dirs, files in os.walk("/library", topdown=False):
         for name in files:
-            library.append(os.path.join(root, name))
+            if name.endswith('.jpeg'):
+                library.append(os.path.join(root, name))
 
     with open("/library/library.json", "w", encoding="utf8") as outfile:
         outfile.write(json.dumps(library))
@@ -72,7 +73,7 @@ def save_images_to_library(text_prompt, generated_imgs):
         pass
 
     for idx, img in enumerate(generated_imgs):
-        img.save(os.path.join(library_dir_name, f'{idx}.jpeg'), format="JPEG")
+        img.save(os.path.join(library_dir_name, f'{str(uuid.uuid4())}.jpeg'), format="JPEG")
     print(f"Saved images to library from text prompt [{text_prompt}]")
 
 
