@@ -37,62 +37,20 @@ const processListing = async (listing) =>
 {
     library = [];
     listingArray = listing;
-    for(const listingItem of listing)
+    for (const listingItem of listing)
     {
         const listingElements = listingItem.split("/");
         const listingNameDateTime = listingElements[2].split("_");
         const libraryItem = {
-            path:  listingItem,
+            path: listingItem,
             name: decodeURIComponent((listingNameDateTime[0])).trim(),
             date: new Date(listingNameDateTime[1] + " " + listingNameDateTime[2])
-            }
+        }
         library.push(libraryItem);
     }
     showImages();
 }
 
-const formatTitle = (title) =>
-{
-    let titleSections = title.replace("/", "").split("_");
-    let titleHTML = `<b>${titleSections[0]}</b>`;
-    titleHTML += `<br><i>${titleSections[1]} ${titleSections[2]}</i>`;
-    return titleHTML;
-}
-
-
-const getImages = async (path) =>
-{
-    const fullPath = `/library/${path}`;
-    for (let i = 0; i < 9; i++)
-    {
-        try
-        {
-            let imageResponse = await fetch(`${fullPath}/${i}.jpeg`, {
-                method: 'HEAD'
-            });
-            if(imageResponse.status === 200)
-            {
-                const pathElements = path.replace("/\n", "").split("_");
-                const dateTimeString = pathElements[1] + " " + pathElements[2];
-                const dateTime = new Date(dateTimeString);
-                let imageData = {
-                    folder: pathElements[0].replace('/library/', ''),
-                    path: `${fullPath}/${i}.jpeg`,
-                    name: pathElements[0] + " - image " + (i),
-                    date: dateTime
-                }
-                library.push(imageData);
-
-            }
-
-        }
-        catch (e)
-        {
-            document.getElementById('status').innerText = "Sorry, service offline";
-        }
-
-    }
-}
 
 const showImages = () =>
 {
@@ -103,12 +61,11 @@ const showImages = () =>
     {
         filteredLibrary = library;
         const wordList = document.getElementById('searchText').value.toLowerCase().split(" ");
-        for(const word of wordList)
+        for (const word of wordList)
         {
-              filteredLibrary = library.filter(entry => entry.name.toLowerCase().includes(word));
+            filteredLibrary = library.filter(entry => entry.name.toLowerCase().includes(word));
         }
-    }
-    else
+    } else
     {
         filteredLibrary = library;
     }
@@ -118,21 +75,21 @@ const showImages = () =>
     let previousName = "";
     let imagesHTML = '<div>';
     let columnCounter = 0;
-    sortedLibrary.forEach((image) =>
+    sortedLibrary.forEach((image, index) =>
     {
-        if (columnCounter === 4 || image.name !== previousName)
+        if(image.name !== previousName)
         {
             imagesHTML += '<br>';
-            columnCounter = 0;
             previousName = image.name;
             imagesHTML += '<hr /><h3>' + image.name + '</h3>';
 
         }
+
         if(adminMode)
         {
-            imagesHTML += `<img height="200"  width="200" src="${image.path}" ondblclick="deleteImage('${image.name}', '${image.path}')" alt="${image.name}">&nbsp;&nbsp;`;
-        }
-        else
+            const jsonData = JSON.stringify(image).replaceAll("\"", "&quot;");
+            imagesHTML += `<img id="img-${index}" height="200" data-image-details="${jsonData}" width="200" src="${image.path}" ondblclick="deleteImage(this)" alt="${image.name}">&nbsp;&nbsp;`;
+        } else
         {
             imagesHTML += `<img height="200" width="200" src="${image.path}" alt="${image.name}">&nbsp;&nbsp;`;
         }
@@ -145,9 +102,12 @@ const showImages = () =>
 }
 
 
-const deleteImage = async (name, path) =>
+const deleteImage = async (img) =>
 {
-    if(window.confirm(`Are you sure you want to delete image "${name}"?`))
+    const jsonData = img.getAttribute('data-image-details');
+    const data = JSON.parse(jsonData.replaceAll("&quot;", "\""));
+
+    if(window.confirm(`Are you sure you want to delete image "${data.name}"?`))
     {
         const rawResponse = await fetch('/deleteimage', {
             method: 'POST',
@@ -156,27 +116,30 @@ const deleteImage = async (name, path) =>
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                path: path
+                path: data.path
             })
         });
 
         if(rawResponse.status === 200)
         {
-            const result = await rawResponse.json();
-            if(result.success)
+            const jsonResult = await rawResponse.text();
+            if(jsonResult === "{success: true}")
             {
                 document.getElementById('status').innerText = "Image deleted";
+                document.getElementById(`${img.id}`).remove();
                 await listLibrary();
             } else
             {
                 document.getElementById('status').innerText = "Image not deleted";
             }
-        }
-        else
+        } else
         {
             document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
         }
     }
 }
 
-setInterval(function () {listLibrary().then()}, 10000);
+setInterval(function ()
+{
+    listLibrary().then()
+}, 10000);

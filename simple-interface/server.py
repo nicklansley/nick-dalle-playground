@@ -1,9 +1,18 @@
 import json
 import os
+import random
 from urllib.parse import unquote
 import signal
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
+global_dictionary = []
+
+# function to read dictionary.txt and return a dictionary
+def read_dictionary():
+    with open('dictionary.txt', 'r') as f:
+        dictionary = f.read().splitlines()
+    return dictionary
 
 
 class RelayServer(BaseHTTPRequestHandler):
@@ -35,14 +44,14 @@ class RelayServer(BaseHTTPRequestHandler):
         if api_command == '/deleteimage':
             if self.process_deleteimage(data):
                 self.send_response(200)
-                self.send_header('Content-type', 'text/plain')
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(b'Delete successful')
+                self.wfile.write(b'{success: true}')
             else:
                 self.send_response(500)
-                self.send_header('Content-type', 'text/plain')
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(b'Delete failed')
+                self.wfile.write(b'{success: false}')
         return
 
     def process_deleteimage(self, data):
@@ -80,6 +89,7 @@ class RelayServer(BaseHTTPRequestHandler):
                 self.log_message(file_path + ' file read successfully')
                 self.send_response(200)
                 self.send_header('Content-Type', response_content_type)
+                self.send_header('X-Nick-Salt', get_random_dictionary_word())
                 self.end_headers()
                 self.wfile.write(data)
 
@@ -106,12 +116,38 @@ def exit_signal_handler(self, sig):
     quit()
 
 
+# gets next dictionary word from dictionary.txt
+def get_next_dictionary_word(current_word):
+    global global_dictionary
+    if len(global_dictionary) == 0:
+        global_dictionary = read_dictionary()
+    if current_word == '':
+        return global_dictionary[0]
+    else:
+        for i in range(len(global_dictionary)):
+            if global_dictionary[i] == current_word:
+                if i + 1 < len(global_dictionary):
+                    return global_dictionary[i + 1]
+                else:
+                    return global_dictionary[0]
+        return global_dictionary[0]
+
+
+# choose random word from global_dictionary
+def get_random_dictionary_word():
+    global global_dictionary
+    if len(global_dictionary) == 0:
+        global_dictionary = read_dictionary()
+    return global_dictionary[random.randint(0, len(global_dictionary) - 1)]
+
+
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, exit_signal_handler)
     signal.signal(signal.SIGINT, exit_signal_handler)
     relayServerRef = HTTPServer(("", 3000), RelayServer)
     sys.stderr.write('Frontend Web Server\n\n')
     sys.stderr.flush()
+    global_dictionary = read_dictionary()
 
     try:
         relayServerRef.serve_forever()

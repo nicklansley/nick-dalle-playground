@@ -8,6 +8,7 @@ COPY *.html /app
 COPY *.js /app
 COPY *.py /app
 COPY naughtywords.txt /app
+COPY dictionary.txt /app
 
 #CMD ["python", "-m", "http.server", "3000"]
 CMD ["python", "server.py"]
