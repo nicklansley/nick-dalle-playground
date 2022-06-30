@@ -14,9 +14,7 @@
         font-family: "Lucida Sans", sans-serif;
     }
     img {
-          border: 1px solid #ffffff;
-          padding: 10px;
-          box-shadow: 5px 10px #888888;
+          border: 5px solid #ffffff;
     }
 
     .label {
@@ -66,10 +64,16 @@
 </style>
 </head>
 <body onload="listLibrary()">
-    <h1>Nick's DALL-E Playground Library</h1>
-    <h3>Images created by this service so far</h3>
+    <h1>Nick's DALL-E Playground</h1>
+    <h2>Library of images created so far</h2>
+
     <a href="index.html">Go back to prompts page</a>
     <div class="label" id="status"></div>
-    <table id="tableLibrary"></table>
+
+    <p>
+        Filter Library: <input type="text" id="searchText" size="30" onkeyup="showImages()">
+        <button  onclick="document.getElementById('searchText').value = '';">Clear Filters</button>
+    </p>
+    <div id="output"></div>
 </body>
 </html>
