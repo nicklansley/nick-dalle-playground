@@ -102,7 +102,7 @@ class RelayServer(BaseHTTPRequestHandler):
         library = []
         for root, dirs, files in os.walk("/app/library", topdown=False):
             for name in files:
-                if name.endswith('.jpeg'):
+                if name.endswith('.jpeg') or name.endswith('.jpg') or name.endswith('.png'):
                     library.append(os.path.join(root, name).replace("/app/library/", "/library/"))
 
         with open("/app/library/library.json", "w", encoding="utf8") as outfile:

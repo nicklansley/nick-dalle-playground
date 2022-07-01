@@ -142,7 +142,8 @@ const deleteImage = async (img) =>
 
 const setAutoRefresh = async () =>
 {
-    if(document.getElementById('autoRefresh').checked)
+    const checkBox = document.getElementById('autoRefresh');
+    if(checkBox.checked)
     {
         await listLibrary();
         autoRefreshId = setInterval(function ()

@@ -40,7 +40,7 @@ def generate_images_api():
     generated_images = []
     for idx, img in enumerate(generated_imgs):
         buffered = BytesIO()
-        img.save(buffered, format="JPEG")
+        img.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
         generated_images.append(img_str)
 
@@ -58,7 +58,7 @@ def create_catalogue():
     library = []
     for root, dirs, files in os.walk("/library", topdown=False):
         for name in files:
-            if name.endswith('.jpeg'):
+            if name.endswith('.jpeg') or name.endswith('.jpg') or name.endswith('.png'):
                 library.append(os.path.join(root, name))
 
     with open("/library/library.json", "w", encoding="utf8") as outfile:
@@ -74,7 +74,7 @@ def save_images_to_library(text_prompt, generated_imgs):
         pass
 
     for idx, img in enumerate(generated_imgs):
-        img.save(os.path.join(library_dir_name, f'{str(uuid.uuid4())}.jpeg'), format="JPEG")
+        img.save(os.path.join(library_dir_name, f'{str(uuid.uuid4())}.jpeg'), format="PNG")
     print(f"Saved images to library from text prompt [{text_prompt[0:254]}]")
 
 
