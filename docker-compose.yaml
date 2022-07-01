@@ -8,8 +8,8 @@ services:
       dockerfile: Dockerfile
     restart: always
     volumes:
-      - app-cache:/root/.cache
-      - library:/library
+      - app-cache-on-s:/root/.cache
+      - library-on-s:/library
     deploy:
       resources:
         reservations:
@@ -28,8 +28,8 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - library:/app/library
-      - library:/app/dalle-playground/library
+      - library-on-s:/app/library
+      - library-on-s:/app/dalle-playground/library
     networks:
       - dalle-internal-network
 
@@ -48,7 +48,15 @@ networks:
     name: dalle-internal-network
 
 volumes:
-  library:
+  app-cache-on-s:
     driver: local
-  app-cache:
+    driver_opts:
+      o: bind
+      type: none
+      device: S:\dalle\backend-cache
+  library-on-s:
     driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: S:\dalle\library

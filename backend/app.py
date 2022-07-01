@@ -74,7 +74,7 @@ def save_images_to_library(text_prompt, generated_imgs):
         pass
 
     for idx, img in enumerate(generated_imgs):
-        img.save(os.path.join(library_dir_name, f'{str(uuid.uuid4())}.jpeg'), format="PNG")
+        img.save(os.path.join(library_dir_name, f'{str(uuid.uuid4())}.png'), format="PNG")
     print(f"Saved images to library from text prompt [{text_prompt[0:254]}]")
 
 
