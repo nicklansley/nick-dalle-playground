@@ -67,14 +67,15 @@ def create_catalogue():
 
 def save_images_to_library(text_prompt, generated_imgs):
     try:
-        library_dir_name = os.path.join('/library', f"{text_prompt}_{time.strftime('%Y-%m-%d_%H:%M:%S')}")
+        library_dir_name = os.path.join('/library', f"{text_prompt[0:254]}_{time.strftime('%Y-%m-%d_%H:%M:%S')}")
+        library_dir_name = library_dir_name.replace('\n', ' ').replace('\r', ' ')
         os.makedirs(library_dir_name)
     except FileExistsError:
         pass
 
     for idx, img in enumerate(generated_imgs):
         img.save(os.path.join(library_dir_name, f'{str(uuid.uuid4())}.jpeg'), format="JPEG")
-    print(f"Saved images to library from text prompt [{text_prompt}]")
+    print(f"Saved images to library from text prompt [{text_prompt[0:254]}]")
 
 
 with app.app_context():

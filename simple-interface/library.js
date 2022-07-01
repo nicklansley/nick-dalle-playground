@@ -1,6 +1,7 @@
 let listingArray = [];
 let library = [];
 let adminMode = true;
+let autoRefreshId;
 
 const listLibrary = async () =>
 {
@@ -139,7 +140,19 @@ const deleteImage = async (img) =>
     }
 }
 
-setInterval(function ()
+const setAutoRefresh = async () =>
 {
-    listLibrary().then()
-}, 10000);
+    if(document.getElementById('autoRefresh').checked)
+    {
+        await listLibrary();
+        autoRefreshId = setInterval(function ()
+                        {
+                            listLibrary().then();
+                        }, 10000);
+    }
+    else
+    {
+        clearInterval(autoRefreshId);
+    }
+
+}
