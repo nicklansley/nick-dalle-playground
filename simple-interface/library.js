@@ -26,81 +26,49 @@ const listLibrary = async () =>
 
     if(rawResponse.status === 200)
     {
-        const result = await rawResponse.json();
-        await processListing(result);
-    } else
+        return  await rawResponse.json();
+    }
+    else
     {
         document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
+        return [];
     }
 }
 
-const processListing = async (listing) =>
+const retrieveImages = async () =>
 {
-    library = [];
-    listingArray = listing;
-    for (const listingItem of listing)
-    {
-        const listingElements = listingItem.split("/");
-        const listingNameDateTime = listingElements[2].split("_");
-        const libraryItem = {
-            path: listingItem,
-            name: decodeURIComponent((listingNameDateTime[0])).trim(),
-            date: new Date(listingNameDateTime[1] + " " + listingNameDateTime[2])
-        }
-        library.push(libraryItem);
-    }
-    showImages();
-}
+    document.getElementById("output").innerHTML = "";
 
-
-const showImages = () =>
-{
-    const filterOn = document.getElementById('searchText').value.length > 0;
-    let filteredLibrary;
-
-    if(filterOn)
+    if(library.length === 0)
     {
-        filteredLibrary = library;
-        const wordList = document.getElementById('searchText').value.toLowerCase().split(" ");
-        for (const word of wordList)
-        {
-            filteredLibrary = library.filter(entry => entry.name.toLowerCase().includes(word));
-        }
-    } else
-    {
-        filteredLibrary = library;
+        library = await listLibrary();
     }
 
-    let sortedLibrary = filteredLibrary.sort((a, b) => a.name > b.name ? 1 : -1);
+    const searchText = document.getElementById('searchText').value;
 
-    let previousName = "";
-    let imagesHTML = '<div>';
-    let columnCounter = 0;
-    sortedLibrary.forEach((image, index) =>
+    for(const libraryItem of library)
     {
-        if(image.name !== previousName)
+        if(searchText.length ===  0 || libraryItem.text_prompt.includes(searchText))
         {
-            imagesHTML += '<br>';
-            previousName = image.name;
-            imagesHTML += '<hr /><h3>' + image.name + '</h3>';
+            const hr = document.createElement("hr");
+            document.getElementById("output").appendChild(hr);
 
+            const h3 = document.createElement("h3");
+            h3.innerText = libraryItem.text_prompt;
+            document.getElementById("output").appendChild(h3);
+
+            for(const image_entry of libraryItem.generated_images)
+            {
+                const image = document.createElement("img");
+                image.src = image_entry;
+                image.alt = libraryItem.text_prompt;
+                document.getElementById("output").appendChild(image);
+            }
         }
 
-        if(adminMode)
-        {
-            const jsonData = JSON.stringify(image).replaceAll("\"", "&quot;");
-            imagesHTML += `<img id="img-${index}" height="200" data-image-details="${jsonData}" width="200" src="${image.path}" ondblclick="deleteImage(this)" alt="${image.name}">&nbsp;&nbsp;`;
-        } else
-        {
-            imagesHTML += `<img height="200" width="200" src="${image.path}" alt="${image.name}">&nbsp;&nbsp;`;
-        }
-        columnCounter++;
-    });
-    imagesHTML += "</div>";
-    document.getElementById('output').innerHTML = imagesHTML;
-    document.getElementById('status').innerText = `${filteredLibrary.length}${filterOn ? " filtered " : " "}images found `;
-
+    }
 }
+
 
 
 const deleteImage = async (img) =>

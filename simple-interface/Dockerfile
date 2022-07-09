@@ -11,8 +11,9 @@ EXPOSE 3000
 COPY *.html /app
 COPY *.js /app
 COPY *.py /app
+COPY run.sh /app
 COPY naughtywords.txt /app
 COPY dictionary.txt /app
 
 #CMD ["python", "-m", "http.server", "3000"]
-CMD ["python", "server.py"]
+CMD ["sh", "run.sh"]

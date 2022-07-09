@@ -96,7 +96,8 @@ class RelayServer(BaseHTTPRequestHandler):
             queue_list = []
             queue_data = r.lrange('queue', 0, -1)
             for queue_item in queue_data:
-                queue_list.append(queue_item.decode())
+                queue_list.append(json.loads(queue_item.decode()))
+            queue_list.reverse()
             print('==>', queue_list)
             return queue_list
         except Exception as e:
