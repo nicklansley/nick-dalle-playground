@@ -4,9 +4,13 @@ import random
 from urllib.parse import unquote
 import signal
 import sys
+import redis
+import uuid
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 global_dictionary = []
+
 
 # function to read dictionary.txt and return a dictionary
 def read_dictionary():
@@ -32,27 +36,72 @@ class RelayServer(BaseHTTPRequestHandler):
                 api_command.endswith('.jpeg') or \
                 api_command.endswith('.jpg'):
             self.process_ui(api_command)
+        elif api_command == '/queue_status':
+            queue_data = self.check_queue_request()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('X-Nick-Salt', get_random_dictionary_word())
+            self.end_headers()
+            response_body = json.dumps(queue_data)
+            self.wfile.write(response_body.encode())
         return
 
     def do_POST(self):
         api_command = unquote(self.path)
-        print("PUT >> API command =", api_command)
+        print("POST >> API command =", api_command)
         content_length = int(self.headers['Content-Length'])
         body = self.rfile.read(content_length)
         data = json.loads(body)
         print(data)
-        if api_command == '/deleteimage':
+        if api_command == '/prompt':
+            result = self.queue_request_to_redis(data)
+            if result == 'X':
+                self.send_response(500)
+                self.end_headers()
+            else:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('X-Nick-Salt', get_random_dictionary_word())
+                self.end_headers()
+                response_body = '{"queue_id": "' + result + '"}'
+                self.wfile.write(response_body.encode())
+
+        elif api_command == '/deleteimage':
             if self.process_deleteimage(data):
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(b'{success: true}')
+                self.wfile.write(b'{"success": true}')
             else:
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(b'{success: false}')
+                self.wfile.write(b'{"success": false}')
         return
+
+    def queue_request_to_redis(self, data):
+        try:
+            r = redis.Redis(host='dalle-scheduler', port=6379, db=0, password='hellothere')
+            data['uuid'] = str(uuid.uuid4())
+            r.lpush('queue', json.dumps(data))
+            print("Request queued to redis with uuid:", data['uuid'])
+            return data['uuid']
+        except Exception as e:
+            print("queue_request_to_redis Error:", e)
+            return 'X'
+
+    def check_queue_request(self):
+        try:
+            r = redis.Redis(host='dalle-scheduler', port=6379, db=0, password='hellothere')
+            queue_list = []
+            queue_data = r.lrange('queue', 0, -1)
+            for queue_item in queue_data:
+                queue_list.append(queue_item.decode())
+            print('==>', queue_list)
+            return queue_list
+        except Exception as e:
+            print("check_queue_request Error:", e)
+            return []
 
     def process_deleteimage(self, data):
         try:
