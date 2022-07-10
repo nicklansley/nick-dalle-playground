@@ -6,6 +6,7 @@ import signal
 import sys
 import redis
 import uuid
+from scheduler import update_library_catalogue
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -108,7 +109,7 @@ class RelayServer(BaseHTTPRequestHandler):
         try:
             os.remove('/app' + data['path'])
             print('/app' + data['path'] + " deleted")
-            self.create_catalogue()
+            update_library_catalogue()
         except FileNotFoundError:
             return False
         return True
@@ -147,18 +148,6 @@ class RelayServer(BaseHTTPRequestHandler):
             self.log_message(file_path + ' file not found')
             self.send_response(404)
             self.end_headers()
-
-    def create_catalogue(self):
-        library = []
-        for root, dirs, files in os.walk("/app/library", topdown=False):
-            for name in files:
-                if name.endswith('.jpeg') or name.endswith('.jpg') or name.endswith('.png'):
-                    library.append(os.path.join(root, name).replace("/app/library/", "/library/"))
-
-        with open("/app/library/library.json", "w", encoding="utf8") as outfile:
-            outfile.write(json.dumps(library))
-
-        print("Updated catalogue")
 
 
 def exit_signal_handler(self, sig):

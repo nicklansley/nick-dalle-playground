@@ -43,7 +43,6 @@ def generate_images_api():
         print(f"Generated {len(generated_imgs)} images")
 
         save_images_to_library(text_prompt, generated_imgs, uuid_value)
-        create_catalogue()
 
         # The data in this array is the base64 encoded image data but is not used
         # at the moment because the frontend is getting the images from the library
@@ -75,35 +74,7 @@ def health_check():
     return jsonify(success=True)
 
 
-def create_catalogue():
-    library = []
-    library_entry = {
-        "text_prompt": "",
-        "num_images": 0,
-        "uuid": "",
-        "generated_images": []
-    }
-    for root, dirs, files in os.walk("/library", topdown=False):
-        for idx_name in files:
-            if idx_name.endswith('.idx'):
-                with open(os.path.join(root, idx_name), "r", encoding="utf8") as infile:
-                    metadata = json.loads(infile.read())
-                    library_entry["text_prompt"] = metadata["text_prompt"]
-                    library_entry["num_images"] = metadata["num_images"]
-                    library_entry["uuid"] = metadata["uuid"]
-                    library_entry["generated_images"] = []
-                    library.append(json.loads(json.dumps(library_entry)))
 
-            for image_name in files:
-                if image_name.endswith('.jpeg') or image_name.endswith('.jpg') or image_name.endswith('.png'):
-                    for library_entry in library:
-                        if library_entry["uuid"] in root:
-                            image_file_path = os.path.join(root, image_name)
-                            if image_file_path not in library_entry["generated_images"]:
-                                library_entry["generated_images"].append(os.path.join(root, image_name))
-
-    with open("/library/library.json", "w", encoding="utf8") as outfile:
-        outfile.write(json.dumps(library, indent=4, sort_keys=True))
 
 
 def save_images_to_library(text_prompt, generated_imgs, uuid_value):

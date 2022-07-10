@@ -1,7 +1,7 @@
+import os
 import json
 import time
 import redis
-import uuid
 import requests
 
 
@@ -47,18 +47,50 @@ def send_request_to_dalle_engine(prompt_info):
         return {'uuid': 'X'}
 
 
+def update_library_catalogue():
+    print('Updating library catalogue')
+    library = []
+    library_entry = {
+        "text_prompt": "",
+        "num_images": 0,
+        "uuid": "",
+        "generated_images": []
+    }
+    for root, dirs, files in os.walk("/app/library", topdown=False):
+        for idx_name in files:
+            if idx_name.endswith('.idx'):
+                with open(os.path.join(root, idx_name), "r", encoding="utf8") as infile:
+                    metadata = json.loads(infile.read())
+                    library_entry["text_prompt"] = metadata["text_prompt"]
+                    library_entry["num_images"] = metadata["num_images"]
+                    library_entry["uuid"] = metadata["uuid"]
+                    library_entry["generated_images"] = []
+                    library.append(json.loads(json.dumps(library_entry)))
+
+            for image_name in files:
+                if image_name.endswith('.jpeg') or image_name.endswith('.jpg') or image_name.endswith('.png'):
+                    for library_entry in library:
+                        if library_entry["uuid"] in root:
+                            image_file_path = os.path.join(root, image_name).replace('/app/', '')
+                            if image_file_path not in library_entry["generated_images"]:
+                                library_entry["generated_images"].append(image_file_path)
+
+    with open("/app/library/library.json", "w", encoding="utf8") as outfile:
+        outfile.write(json.dumps(library, indent=4, sort_keys=True))
+
+
 if __name__ == "__main__":
     print("Scheduler started")
     while True:
         time.sleep(1)
         print("Checking queue")
         queue_item = get_next_queue_request()
-        print("Queue item:", queue_item)
         if queue_item['uuid'] != 'X':
             print("Sending request to dalle engine")
             request_data = send_request_to_dalle_engine(queue_item)
             print("Request data:", request_data)
             if request_data['success'] and request_data['uuid'] == queue_item['uuid']:
                 delete_request_from_redis_queue(queue_item)
+                update_library_catalogue()
             else:
                 print("Request failed")

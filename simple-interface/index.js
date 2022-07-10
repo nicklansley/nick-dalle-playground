@@ -1,6 +1,6 @@
 let global_currentUUID = '';
 let imagesRetrievedFlag = false;
-
+let processingFlag = false;
 
 const go = async () =>
 {
@@ -30,6 +30,7 @@ const go = async () =>
         const queueConfirmation = await rawResponse.json();
         global_currentUUID = queueConfirmation.queue_id;
         document.getElementById('status').innerText = `Request queued with ID ${queueConfirmation.queue_id}`;
+        processingFlag = true;
     }
     else
     {
@@ -52,45 +53,73 @@ const updateQueue = async () =>
                 'Content-Type': 'application/json'
             },
         });
-        if(queueResponse.status === 200)
-        {
-            const queueData = await queueResponse.json();
-            await displayQueue(queueData);
-        }
+
+    if(queueResponse.status === 200)
+    {
+        const queueData = await queueResponse.json();
+        await displayQueue(queueData);
+    }
+
+    await checkIfReadyToDisplayImages();
 }
 
 const displayQueue = async (queueList) =>
 {
-    const queueUI = document.getElementById("queue");
-    queueUI.innerHTML = "Current queue:<br>";
-    const orderedList = document.createElement("ol");
     let foundMyUUID = false;
-
-    let queuePosition = 1;
-    for(const queueItem of queueList)
+    const queueUI = document.getElementById("queue");
+    if(queueList.length === 0)
     {
-        let displayLine = `${queueItem.text} - (${queueItem.num_images} images)`;
-        if(queueItem.uuid === global_currentUUID)
+        queueUI.innerHTML = "Current queue: Empty<br>You'll be first if you submit a request!";
+    }
+    else
+    {
+        queueUI.innerHTML = "Current queue:<br>";
+        const orderedList = document.createElement("ol");
+
+        let queuePosition = 1;
+        for (const queueItem of queueList)
         {
-            displayLine += " <--";
-            foundMyUUID = true;
-            document.getElementById('status').innerText = `Request queued - position: ${queuePosition}`;
+            let displayLine = `${queueItem.text} - (${queueItem.num_images} images)`;
+            if(queueItem.uuid === global_currentUUID)
+            {
+                displayLine += " <--";
+                foundMyUUID = true;
+                document.getElementById('status').innerText = `Request queued - position: ${queuePosition}`;
+            }
+            const listItem = document.createElement("li");
+            listItem.innerText = displayLine;
+            orderedList.appendChild(listItem);
+            queuePosition += 1;
         }
-        const listItem = document.createElement("li");
-        listItem.innerText = displayLine;
-        orderedList.appendChild(listItem);
-        queuePosition += 1;
+        queueUI.appendChild(orderedList);
     }
 
     if(foundMyUUID)
     {
-        queueUI.appendChild(orderedList);
+        // If the current UUID is in the queue, it has not yet been processed
+        imagesRetrievedFlag = false;
+        processingFlag = true;
     }
-    else if(!imagesRetrievedFlag)
+    else
     {
+        // If the current UUID is not in the queue, it has been processed
+        processingFlag = false;
+    }
+
+
+}
+
+const checkIfReadyToDisplayImages = async () =>
+{
+    if(!processingFlag && !imagesRetrievedFlag)
+    {
+        // If the current UUID is no longer in the queue then they are ready!
+        // If we haven't already retrieved the images then we need to retrieve them now,
+        // and mark them retrieved vy setting the imagesRetrievedFlag to true:
         document.getElementById('status').innerText = `Processing completed`;
         await retrieveImages();
         imagesRetrievedFlag = true;
+        processingFlag = false;
     }
 }
 
@@ -119,6 +148,11 @@ const listLibrary = async () =>
     {
         document.getElementById('status').innerText = "Ready";
         return  await rawResponse.json();
+    }
+    else if(rawResponse.status === 502)
+    {
+        document.getElementById('status').innerText = `AI currently powering up and will start work on queued requests soon.`;
+        return [];
     }
     else
     {
@@ -183,7 +217,13 @@ const checkLive = async () =>
                 document.getElementById('status').innerText = "Online but not yet ready";
                 return false;
             }
-        } else
+        }
+        else if(rawResponse.status === 502)
+        {
+            document.getElementById('status').innerText = `AI currently powering up and will start work on queued requests soon.`;
+            return false;
+        }
+        else
         {
             document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
         }
