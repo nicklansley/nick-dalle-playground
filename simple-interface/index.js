@@ -79,15 +79,17 @@ const displayQueue = async (queueList) =>
         let queuePosition = 1;
         for (const queueItem of queueList)
         {
-            let displayLine = `${queueItem.text} - (${queueItem.num_images} images)`;
+            const listItem = document.createElement("li");
+            listItem.innerText = `${queuePosition === 1 ? "Processing >> " : ""}${queueItem.text} - (${queueItem.num_images} images)`;
             if(queueItem.uuid === global_currentUUID)
             {
-                displayLine += " <--";
+                listItem.style.fontWeight = "bold";
+                listItem.style.backgroundColor = "lightgreen";
                 foundMyUUID = true;
                 document.getElementById('status').innerText = `Request queued - position: ${queuePosition}`;
             }
-            const listItem = document.createElement("li");
-            listItem.innerText = displayLine;
+
+
             orderedList.appendChild(listItem);
             queuePosition += 1;
         }

@@ -26,7 +26,7 @@ const listLibrary = async () =>
 
     if(rawResponse.status === 200)
     {
-        return  await rawResponse.json();
+        return await rawResponse.json();
     }
     else
     {
@@ -46,9 +46,9 @@ const retrieveImages = async () =>
 
     const searchText = document.getElementById('searchText').value;
 
-    for(const libraryItem of library)
+    for (const libraryItem of library)
     {
-        if(searchText.length ===  0 || libraryItem.text_prompt.includes(searchText))
+        if(searchText.length === 0 || libraryItem.text_prompt.includes(searchText))
         {
             const hr = document.createElement("hr");
             document.getElementById("output").appendChild(hr);
@@ -57,11 +57,20 @@ const retrieveImages = async () =>
             h3.innerText = libraryItem.text_prompt;
             document.getElementById("output").appendChild(h3);
 
-            for(const image_entry of libraryItem.generated_images)
+            for (const image_entry of libraryItem.generated_images)
             {
                 const image = document.createElement("img");
                 image.src = image_entry;
+                image.id = libraryItem.uuid;
                 image.alt = libraryItem.text_prompt;
+                const dataImageDetails = JSON.parse(JSON.stringify(libraryItem));
+                delete dataImageDetails.generated_images;
+                dataImageDetails.path = image_entry;
+                image.setAttribute('data-image-details', JSON.stringify(dataImageDetails));
+                image.ondblclick = function ()
+                {
+                    deleteImage(this);
+                };
                 document.getElementById("output").appendChild(image);
             }
         }
@@ -70,13 +79,12 @@ const retrieveImages = async () =>
 }
 
 
-
 const deleteImage = async (img) =>
 {
     const jsonData = img.getAttribute('data-image-details');
     const data = JSON.parse(jsonData.replaceAll("&quot;", "\""));
 
-    if(window.confirm(`Are you sure you want to delete image "${data.name}"?`))
+    if(window.confirm(`Are you sure you want to delete image "${data.text_prompt}"?`))
     {
         const rawResponse = await fetch('/deleteimage', {
             method: 'POST',
@@ -91,13 +99,14 @@ const deleteImage = async (img) =>
 
         if(rawResponse.status === 200)
         {
-            const jsonResult = await rawResponse.text();
-            if(jsonResult === "{success: true}")
+            const jsonResult = await rawResponse.json();
+            if(jsonResult.success)
             {
                 document.getElementById('status').innerText = "Image deleted";
                 document.getElementById(`${img.id}`).remove();
                 await listLibrary();
-            } else
+            }
+            else
             {
                 document.getElementById('status').innerText = "Image not deleted";
             }
@@ -115,11 +124,10 @@ const setAutoRefresh = async () =>
     {
         await listLibrary();
         autoRefreshId = setInterval(function ()
-                        {
-                            listLibrary().then();
-                        }, 10000);
-    }
-    else
+        {
+            listLibrary().then();
+        }, 10000);
+    } else
     {
         clearInterval(autoRefreshId);
     }

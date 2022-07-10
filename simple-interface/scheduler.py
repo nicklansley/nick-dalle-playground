@@ -67,13 +67,14 @@ def update_library_catalogue():
                     library_entry["generated_images"] = []
                     library.append(json.loads(json.dumps(library_entry)))
 
-            for image_name in files:
-                if image_name.endswith('.jpeg') or image_name.endswith('.jpg') or image_name.endswith('.png'):
-                    for library_entry in library:
-                        if library_entry["uuid"] in root:
-                            image_file_path = os.path.join(root, image_name).replace('/app/', '')
-                            if image_file_path not in library_entry["generated_images"]:
-                                library_entry["generated_images"].append(image_file_path)
+    for root, dirs, files in os.walk("/app/library", topdown=False):
+        for image_name in files:
+            if image_name.endswith('.jpeg') or image_name.endswith('.jpg') or image_name.endswith('.png'):
+                for library_entry in library:
+                    if library_entry["uuid"] in root:
+                        image_file_path = os.path.join(root, image_name).replace('/app/', '')
+                        if image_file_path not in library_entry["generated_images"]:
+                            library_entry["generated_images"].append(image_file_path)
 
     with open("/app/library/library.json", "w", encoding="utf8") as outfile:
         outfile.write(json.dumps(library, indent=4, sort_keys=True))

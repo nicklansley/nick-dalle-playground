@@ -107,10 +107,11 @@ class RelayServer(BaseHTTPRequestHandler):
 
     def process_deleteimage(self, data):
         try:
-            os.remove('/app' + data['path'])
-            print('/app' + data['path'] + " deleted")
+            os.remove('/app/' + data['path'])
+            print('/app/' + data['path'] + " deleted")
             update_library_catalogue()
-        except FileNotFoundError:
+        except FileNotFoundError as fnfe:
+            print("FileNotFoundError:", fnfe)
             return False
         return True
 
