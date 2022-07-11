@@ -59,11 +59,14 @@ def update_library_catalogue():
     for root, dirs, files in os.walk("/app/library", topdown=False):
         for idx_name in files:
             if idx_name.endswith('.idx'):
-                with open(os.path.join(root, idx_name), "r", encoding="utf8") as infile:
+                idx_file_name = os.path.join(root, idx_name)
+                unix_time = os.path.getmtime(idx_file_name)
+                with open(idx_file_name, "r", encoding="utf8") as infile:
                     metadata = json.loads(infile.read())
                     library_entry["text_prompt"] = metadata["text_prompt"]
                     library_entry["num_images"] = metadata["num_images"]
                     library_entry["uuid"] = metadata["uuid"]
+                    library_entry["creation_unixtime"] = unix_time
                     library_entry["generated_images"] = []
                     library.append(json.loads(json.dumps(library_entry)))
 

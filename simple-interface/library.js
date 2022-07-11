@@ -37,12 +37,12 @@ const listLibrary = async () =>
 
 const retrieveImages = async () =>
 {
+    let imageCount = 0;
+    let libraryEntryCount = 0;
     document.getElementById("output").innerHTML = "";
 
-    if(library.length === 0)
-    {
-        library = await listLibrary();
-    }
+    library = await listLibrary();
+    library = library.sort((a, b) => a.creation_unixtime > b.creation_unixtime ? -1 : 1);
 
     const searchText = document.getElementById('searchText').value;
 
@@ -50,23 +50,31 @@ const retrieveImages = async () =>
     {
         if(searchText.length === 0 || libraryItem.text_prompt.includes(searchText))
         {
+            libraryEntryCount += 1;
             const hr = document.createElement("hr");
             document.getElementById("output").appendChild(hr);
 
             const h3 = document.createElement("h3");
-            h3.innerText = libraryItem.text_prompt;
+            let creationDate = new Date(`${libraryItem.creation_unixtime}`.split(".")[0] * 1000);
+            h3.innerHTML = `<i>${libraryItem.text_prompt}</i><br><small>${creationDate.toLocaleString()}</small>`;
             document.getElementById("output").appendChild(h3);
 
             for (const image_entry of libraryItem.generated_images)
             {
+                imageCount += 1;
+                const imageName = image_entry.split("/")[2];
                 const image = document.createElement("img");
                 image.src = image_entry;
-                image.id = libraryItem.uuid;
+                image.id = imageName.split('.')[0];
                 image.alt = libraryItem.text_prompt;
+
+                // Add data-image-details attribute to image using the
+                // libraryItem object with generated_images list deleted.
                 const dataImageDetails = JSON.parse(JSON.stringify(libraryItem));
                 delete dataImageDetails.generated_images;
                 dataImageDetails.path = image_entry;
                 image.setAttribute('data-image-details', JSON.stringify(dataImageDetails));
+
                 image.ondblclick = function ()
                 {
                     deleteImage(this);
@@ -74,8 +82,9 @@ const retrieveImages = async () =>
                 document.getElementById("output").appendChild(image);
             }
         }
-
     }
+    const dateNow = new Date();
+    document.getElementById('status').innerText = `Updated ${dateNow.toLocaleString()} - Found ${imageCount} images within ${libraryEntryCount} library entries`;
 }
 
 
@@ -104,7 +113,6 @@ const deleteImage = async (img) =>
             {
                 document.getElementById('status').innerText = "Image deleted";
                 document.getElementById(`${img.id}`).remove();
-                await listLibrary();
             }
             else
             {
@@ -125,7 +133,7 @@ const setAutoRefresh = async () =>
         await listLibrary();
         autoRefreshId = setInterval(function ()
         {
-            listLibrary().then();
+            retrieveImages().then();
         }, 10000);
     } else
     {

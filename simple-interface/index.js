@@ -156,6 +156,11 @@ const listLibrary = async () =>
         document.getElementById('status').innerText = `AI currently powering up and will start work on queued requests soon.`;
         return [];
     }
+    else  if(rawResponse.status === 404)
+    {
+        document.getElementById('status').innerText = "DALL-E Engine Status: Online and ready";
+        return [];
+    }
     else
     {
         document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
