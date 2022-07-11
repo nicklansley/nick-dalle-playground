@@ -61,14 +61,17 @@ def update_library_catalogue():
             if idx_name.endswith('.idx'):
                 idx_file_name = os.path.join(root, idx_name)
                 unix_time = os.path.getmtime(idx_file_name)
-                with open(idx_file_name, "r", encoding="utf8") as infile:
-                    metadata = json.loads(infile.read())
-                    library_entry["text_prompt"] = metadata["text_prompt"]
-                    library_entry["num_images"] = metadata["num_images"]
-                    library_entry["uuid"] = metadata["uuid"]
-                    library_entry["creation_unixtime"] = unix_time
-                    library_entry["generated_images"] = []
-                    library.append(json.loads(json.dumps(library_entry)))
+                try:
+                    with open(idx_file_name, "r", encoding="utf8") as infile:
+                        metadata = json.loads(infile.read())
+                        library_entry["text_prompt"] = metadata["text_prompt"]
+                        library_entry["num_images"] = metadata["num_images"]
+                        library_entry["uuid"] = metadata["uuid"]
+                        library_entry["creation_unixtime"] = unix_time
+                        library_entry["generated_images"] = []
+                        library.append(json.loads(json.dumps(library_entry)))
+                except json.decoder.JSONDecodeError as jde:
+                    print("update_library_catalogue JSONDecodeError:", jde)
 
     for root, dirs, files in os.walk("/app/library", topdown=False):
         for image_name in files:
@@ -85,16 +88,18 @@ def update_library_catalogue():
 
 if __name__ == "__main__":
     print("Scheduler started")
+    update_library_catalogue()
     while True:
         time.sleep(1)
         print("Checking queue")
         queue_item = get_next_queue_request()
         if queue_item['uuid'] != 'X':
-            print("Sending request to dalle engine")
+            print("\n\n======= SCHEDULER: Sending request to dalle engine: {} ===== ({} images)\n\n".format(queue_item['text'], queue_item['num_images']))
             request_data = send_request_to_dalle_engine(queue_item)
             print("Request data:", request_data)
             if request_data['success'] and request_data['uuid'] == queue_item['uuid']:
                 delete_request_from_redis_queue(queue_item)
                 update_library_catalogue()
+                print("\n\n======= SCHEDULER: Procesisng complete - updating library)\n\n")
             else:
                 print("Request failed")

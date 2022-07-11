@@ -39,12 +39,16 @@ const retrieveImages = async () =>
 {
     let imageCount = 0;
     let libraryEntryCount = 0;
-    document.getElementById("output").innerHTML = "";
 
+    // retrieve the library and sort by descending creation_unixtime
     library = await listLibrary();
     library = library.sort((a, b) => a.creation_unixtime > b.creation_unixtime ? -1 : 1);
 
+    //get the searchText value (if any)
     const searchText = document.getElementById('searchText').value;
+
+    // Clear the listing
+    document.getElementById("output").innerHTML = "";
 
     for (const libraryItem of library)
     {
