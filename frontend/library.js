@@ -1,6 +1,4 @@
-let listingArray = [];
 let library = [];
-let adminMode = true;
 let autoRefreshId;
 
 const listLibrary = async () =>

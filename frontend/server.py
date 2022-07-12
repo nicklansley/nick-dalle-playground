@@ -6,24 +6,57 @@ import signal
 import sys
 import redis
 import uuid
-from scheduler import update_library_catalogue
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-global_dictionary = []
 
+def update_library_catalogue():
+    print('\nFRONTEND: Updating library catalogue')
+    library = []
+    library_entry = {
+        "text_prompt": "",
+        "uuid": "",
+        "generated_images": []
+    }
+    for root, dirs, files in os.walk("/app/library", topdown=False):
+        for idx_name in files:
+            if idx_name.endswith('.idx'):
+                idx_file_name = os.path.join(root, idx_name)
+                unix_time = os.path.getmtime(idx_file_name)
+                try:
+                    with open(idx_file_name, "r", encoding="utf8") as infile:
+                        metadata = json.loads(infile.read())
+                        library_entry["text_prompt"] = metadata["text_prompt"]
+                        library_entry["uuid"] = metadata["uuid"]
+                        library_entry["creation_unixtime"] = unix_time
+                        library_entry["generated_images"] = []
+                        library.append(json.loads(json.dumps(library_entry)))
+                except json.decoder.JSONDecodeError as jde:
+                    print("\nFRONTEND: : update_library_catalogue JSONDecodeError:", jde)
 
-# function to read dictionary.txt and return a dictionary
-def read_dictionary():
-    with open('dictionary.txt', 'r') as f:
-        dictionary = f.read().splitlines()
-    return dictionary
+    for root, dirs, files in os.walk("/app/library", topdown=False):
+        for image_name in files:
+            if image_name.endswith('.jpeg') or image_name.endswith('.jpg') or image_name.endswith('.png'):
+                for library_entry in library:
+                    if library_entry["uuid"] in root:
+                        image_file_path = os.path.join(root, image_name).replace('/app/', '')
+                        if image_file_path not in library_entry["generated_images"]:
+                            library_entry["generated_images"].append(image_file_path)
+
+    for library_entry in library:
+        if len(library_entry["generated_images"]) == 0:
+            library.remove(library_entry)
+
+    with open("/app/library/library.json", "w", encoding="utf8") as outfile:
+        outfile.write(json.dumps(library, indent=4, sort_keys=True))
+
+    print('\n\nFRONTEND: : Update of library catalogue completed')
 
 
 class RelayServer(BaseHTTPRequestHandler):
     def do_GET(self):
         api_command = unquote(self.path)
-        print("GET >> API command =", api_command)
+        print("\nFRONTEND: GET >> API command =", api_command)
         if api_command.endswith('/'):
             self.process_ui('/index.html')
         elif api_command.endswith('/getlibrary'):
@@ -41,7 +74,6 @@ class RelayServer(BaseHTTPRequestHandler):
             queue_data = self.check_queue_request()
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
-            self.send_header('X-Nick-Salt', get_random_dictionary_word())
             self.end_headers()
             response_body = json.dumps(queue_data)
             self.wfile.write(response_body.encode())
@@ -49,11 +81,11 @@ class RelayServer(BaseHTTPRequestHandler):
 
     def do_POST(self):
         api_command = unquote(self.path)
-        print("POST >> API command =", api_command)
+        print("\nFRONTEND: POST >> API command =", api_command)
         content_length = int(self.headers['Content-Length'])
         body = self.rfile.read(content_length)
         data = json.loads(body)
-        print(data)
+        print("\nFRONTEND:", data)
         if api_command == '/prompt':
             result = self.queue_request_to_redis(data)
             if result == 'X':
@@ -62,7 +94,6 @@ class RelayServer(BaseHTTPRequestHandler):
             else:
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
-                self.send_header('X-Nick-Salt', get_random_dictionary_word())
                 self.end_headers()
                 response_body = '{"queue_id": "' + result + '"}'
                 self.wfile.write(response_body.encode())
@@ -85,10 +116,10 @@ class RelayServer(BaseHTTPRequestHandler):
             r = redis.Redis(host='dalle-scheduler', port=6379, db=0, password='hellothere')
             data['uuid'] = str(uuid.uuid4())
             r.lpush('queue', json.dumps(data))
-            print("Request queued to redis with uuid:", data['uuid'])
+            print("\nFRONTEND: Request queued to redis with uuid:", data['uuid'])
             return data['uuid']
         except Exception as e:
-            print("queue_request_to_redis Error:", e)
+            print("\nFRONTEND: queue_request_to_redis Error:", e)
             return 'X'
 
     def check_queue_request(self):
@@ -101,16 +132,16 @@ class RelayServer(BaseHTTPRequestHandler):
             queue_list.reverse()
             return queue_list
         except Exception as e:
-            print("check_queue_request Error:", e)
+            print("\nFRONTEND: check_queue_request Error:", e)
             return []
 
     def process_deleteimage(self, data):
         try:
             os.remove('/app/' + data['path'])
-            print('/app/' + data['path'] + " deleted")
+            print('\nFRONTEND: /app/' + data['path'] + " deleted")
             update_library_catalogue()
         except FileNotFoundError as fnfe:
-            print("FileNotFoundError:", fnfe)
+            print("\nFRONTEND: process_deleteimage FileNotFoundError:", fnfe)
             return False
         return True
 
@@ -140,7 +171,6 @@ class RelayServer(BaseHTTPRequestHandler):
                 self.log_message(file_path + ' file read successfully')
                 self.send_response(200)
                 self.send_header('Content-Type', response_content_type)
-                self.send_header('X-Nick-Salt', get_random_dictionary_word())
                 self.end_headers()
                 self.wfile.write(data)
 
@@ -156,38 +186,12 @@ def exit_signal_handler(self, sig):
     quit()
 
 
-# gets next dictionary word from dictionary.txt
-def get_next_dictionary_word(current_word):
-    global global_dictionary
-    if len(global_dictionary) == 0:
-        global_dictionary = read_dictionary()
-    if current_word == '':
-        return global_dictionary[0]
-    else:
-        for i in range(len(global_dictionary)):
-            if global_dictionary[i] == current_word:
-                if i + 1 < len(global_dictionary):
-                    return global_dictionary[i + 1]
-                else:
-                    return global_dictionary[0]
-        return global_dictionary[0]
-
-
-# choose random word from global_dictionary
-def get_random_dictionary_word():
-    global global_dictionary
-    if len(global_dictionary) == 0:
-        global_dictionary = read_dictionary()
-    return global_dictionary[random.randint(0, len(global_dictionary) - 1)]
-
-
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, exit_signal_handler)
     signal.signal(signal.SIGINT, exit_signal_handler)
     relayServerRef = HTTPServer(("", 3000), RelayServer)
     sys.stderr.write('Frontend Web Server\n\n')
     sys.stderr.flush()
-    global_dictionary = read_dictionary()
 
     try:
         relayServerRef.serve_forever()

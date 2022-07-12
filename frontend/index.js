@@ -7,7 +7,6 @@ const go = async () =>
     document.getElementById('status').innerText = "Processing..."
     document.getElementById('buttonGo').innerText = "Processing...";
     document.getElementById('buttonGo').enabled = false;
-    const start = new Date().getTime();
     const data = {
         text: document.getElementById("prompt").value,
         num_images: parseInt(document.getElementById("num_images").value)
@@ -29,16 +28,13 @@ const go = async () =>
     {
         const queueConfirmation = await rawResponse.json();
         global_currentUUID = queueConfirmation.queue_id;
-        document.getElementById('status').innerText = `Request queued with ID ${queueConfirmation.queue_id}`;
+        document.getElementById('status').innerText = `Request queued - check the queue for position`;
         processingFlag = true;
     }
     else
     {
         document.getElementById('status').innerText = `DALL-E Engine Status: Sorry, an HTTP error ${rawResponse.status} occurred - have another go!`;
     }
-    const end = new Date().getTime();
-    const time = end - start;
-    document.getElementById('status').innerText = `Completed! These ${data.num_images} images took ${(time/1000).toFixed(2)} seconds to generate (${(time/1000/data.num_images).toFixed(2)} secs/image).`;
     document.getElementById('buttonGo').innerText = "Click to send request";
     document.getElementById('buttonGo').enabled = true;
 }
@@ -73,19 +69,40 @@ const displayQueue = async (queueList) =>
     }
     else
     {
-        queueUI.innerHTML = "Current queue:<br>";
+        // The first item in the queue is the one that the AI is currently processing:
+        queueUI.innerHTML = `Current queue:<br><b>PROCESSING: ${queueList[0].text} - (${queueList[0].num_images} images)</b>`;
+
+        const processingDiv = document.createElement("div");
+        processingDiv.innerHTML = `<b>PROCESSING: ${queueList[0].text} - (${queueList[0].num_images} images)</b>`;
+
+        // If we are the first in the queue, our prompt is the one currently being processed by the AI
+        // so highlight it:
+        if(queueList[0].uuid === global_currentUUID)
+        {
+            queueList[0].style.fontWeight = "bold";
+            queueList[0].style.backgroundColor = "lightgreen";
+            foundMyUUID = true;
+            // Mention this in the status message:
+            document.getElementById('status').innerText = `Your request is being processed right now!`;
+        }
+
+        // Add the rest of the queue to the UI:
         const orderedList = document.createElement("ol");
 
         let queuePosition = 1;
-        for (const queueItem of queueList)
+        for (let queueIndex = 1; queueIndex < queueList.length; queueIndex += 1)
         {
+            let queueItem = queueList[queueIndex];
             const listItem = document.createElement("li");
-            listItem.innerText = `${queuePosition === 1 ? "Processing >> " : ""}${queueItem.text} - (${queueItem.num_images} images)`;
+            listItem.innerText = `${queueItem.text} - (${queueItem.num_images} images)`;
+
+            // If the UUID matches the one returned to use by the AI, this is our request, so highlight it:
             if(queueItem.uuid === global_currentUUID)
             {
                 listItem.style.fontWeight = "bold";
                 listItem.style.backgroundColor = "lightgreen";
                 foundMyUUID = true;
+                // Mention this in the status message:
                 document.getElementById('status').innerText = `Request queued - position: ${queuePosition}`;
             }
 
@@ -104,7 +121,7 @@ const displayQueue = async (queueList) =>
     }
     else
     {
-        // If the current UUID is not in the queue, it has been processed
+        // If the current UUID is not anywhere in the queue, it has been processed
         processingFlag = false;
     }
 
@@ -188,53 +205,5 @@ const retrieveImages = async () =>
     }
 }
 
-
-const checkLive = async () =>
-{
-    let rawResponse;
-    if(!document.getElementById('status').innerText.includes("Sorry"))
-    {
-
-        try
-        {
-            rawResponse = await fetch('/status', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
-        catch (e)
-        {
-            document.getElementById('status').innerText = "DALL-E Engine Status: Sorry, service offline";
-            return false;
-        }
-
-        if(rawResponse.status === 200)
-        {
-            const result = await rawResponse.json();
-
-            if(result.success)
-            {
-                document.getElementById('status').innerText = "DALL-E Engine Status: Online and ready";
-                return true;
-            } else
-            {
-                document.getElementById('status').innerText = "Online but not yet ready";
-                return false;
-            }
-        }
-        else if(rawResponse.status === 502)
-        {
-            document.getElementById('status').innerText = `AI currently powering up and will start work on queued requests soon.`;
-            return false;
-        }
-        else
-        {
-            document.getElementById('status').innerText = `Sorry, an HTTP error ${rawResponse.status} occurred - check again shortly!`;
-        }
-    }
-}
 
 setInterval(updateQueue, 1000);

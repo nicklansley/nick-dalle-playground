@@ -31,6 +31,7 @@ args = parser.parse_args()
 @cross_origin()
 def generate_images_api():
     try:
+        start = time.time()
         json_data = request.get_json(force=True)
         print(f"Received json_data: {json_data}")
         request_data = json.loads(json_data)
@@ -41,8 +42,9 @@ def generate_images_api():
 
         generated_imgs = dalle_model.generate_images(text_prompt, num_images)
         print(f"Generated {len(generated_imgs)} images")
-
-        save_images_to_library(text_prompt, generated_imgs, uuid_value)
+        end = time.time()
+        time_taken = end - start
+        save_images_to_library(text_prompt, generated_imgs, uuid_value, time_taken)
 
         # The data in this array is the base64 encoded image data but is not used
         # at the moment because the frontend is getting the images from the library
@@ -53,10 +55,12 @@ def generate_images_api():
             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
             generated_images.append(img_str)
 
-        print(f"Created {len(generated_images)} images from text prompt [{text_prompt}]")
+        print(f"Created {len(generated_images)} images from text prompt [{text_prompt} in {time_taken} seconds]")
+
         response = {
             "success": True,
-            "uuid": uuid_value
+            "uuid": uuid_value,
+            "time_taken": time_taken
         }
         return json.dumps(response)
     except Exception as e:
@@ -74,10 +78,7 @@ def health_check():
     return jsonify(success=True)
 
 
-
-
-
-def save_images_to_library(text_prompt, generated_imgs, uuid_value):
+def save_images_to_library(text_prompt, generated_imgs, uuid_value, time_taken):
     library_dir_name = os.path.join('/library', uuid_value)
     library_dir_name = library_dir_name.replace('\n', ' ').replace('\r', ' ')
     try:
@@ -89,7 +90,8 @@ def save_images_to_library(text_prompt, generated_imgs, uuid_value):
         metadata = {
             "text_prompt": text_prompt,
             "num_images": len(generated_imgs),
-            "uuid": uuid_value
+            "uuid": uuid_value,
+            "time_taken": time_taken
         }
         outfile.write(json.dumps(metadata))
 

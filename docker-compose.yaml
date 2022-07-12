@@ -19,12 +19,14 @@ services:
     networks:
       - dalle-internal-network
 
-  dalle-interface:
-    container_name: dalle-interface
+  dalle-frontend:
+    container_name: dalle-frontend
     build:
-      context: ./simple-interface
+      context: frontend
       dockerfile: Dockerfile
     restart: always
+    ports:
+      - '8000:3000'
     stdin_open: true
     tty: true
     volumes:
@@ -45,15 +47,6 @@ services:
       - '6379:6379'
     volumes:
       - library-on-s:/app/library
-    networks:
-      - dalle-internal-network
-
-  dalle-proxy-service:
-    build: './proxyserver'
-    container_name: dalle-proxy
-    restart: always
-    ports:
-      - '8000:80'
     networks:
       - dalle-internal-network
       
