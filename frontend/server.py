@@ -29,6 +29,7 @@ def update_library_catalogue():
                         library_entry["text_prompt"] = metadata["text_prompt"]
                         library_entry["uuid"] = metadata["uuid"]
                         library_entry["creation_unixtime"] = unix_time
+                        library_entry["process_time_secs"] = metadata["time_taken"]
                         library_entry["generated_images"] = []
                         library.append(json.loads(json.dumps(library_entry)))
                 except json.decoder.JSONDecodeError as jde:

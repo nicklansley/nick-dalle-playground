@@ -79,8 +79,6 @@ const displayQueue = async (queueList) =>
         // so highlight it:
         if(queueList[0].uuid === global_currentUUID)
         {
-            queueList[0].style.fontWeight = "bold";
-            queueList[0].style.backgroundColor = "lightgreen";
             foundMyUUID = true;
             // Mention this in the status message:
             document.getElementById('status').innerText = `Your request is being processed right now!`;

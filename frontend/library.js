@@ -52,7 +52,7 @@ const retrieveImages = async () =>
     {
         if(searchText.length === 0 || libraryItem.text_prompt.includes(searchText))
         {
-            if(libraryItem.generated_images.generated_images.length > 0)
+            if(libraryItem.generated_images.length > 0)
             {
                 libraryEntryCount += 1;
                 const hr = document.createElement("hr");
@@ -60,7 +60,8 @@ const retrieveImages = async () =>
 
                 const h3 = document.createElement("h3");
                 let creationDate = new Date(`${libraryItem.creation_unixtime}`.split(".")[0] * 1000);
-                h3.innerHTML = `<i>${libraryItem.text_prompt}</i><br><small>${creationDate.toLocaleString()}</small>`;
+                h3.innerHTML = `<i>${libraryItem.text_prompt}</i><br><small>${creationDate.toLocaleString()} - `;
+                h3.innerHTML += `processing took ${Math.round(libraryItem.process_time_secs)} seconds (${Math.round(libraryItem.process_time_secs / libraryItem.generated_images.length)} secs/image)</small>`;
                 document.getElementById("output").appendChild(h3);
 
                 for (const image_entry of libraryItem.generated_images)
