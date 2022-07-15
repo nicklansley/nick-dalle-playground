@@ -112,7 +112,13 @@ if __name__ == "__main__":
             print("SCHEDULER: Sending request to dalle engine: {} ===== ({} images)\n\n".format(queue_item['text'],
                                                                                                 queue_item[
                                                                                                     'num_images']))
-            request_data = send_request_to_dalle_engine(queue_item)
+            request_data = {'uuid': 'X'}
+            while request_data['uuid'] == 'X':
+                request_data = send_request_to_dalle_engine(queue_item)
+                if request_data['uuid'] == 'X':
+                    print("SCHEDULER: Error sending request to dalle engine, retrying...")
+                    time.sleep(1)
+
             if request_data['success'] and request_data['uuid'] == queue_item['uuid']:
                 delete_request_from_redis_queue(queue_item)
                 update_library_catalogue()

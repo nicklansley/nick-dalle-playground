@@ -8,7 +8,6 @@ import time
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
-from consts import IMAGES_OUTPUT_DIR
 from utils import parse_arg_boolean, parse_arg_dalle_version
 from consts import ModelSize
 
