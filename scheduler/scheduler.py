@@ -42,10 +42,13 @@ def delete_request_from_redis_queue(queue_data):
 def send_request_to_dalle_engine(prompt_info):
     try:
         prompt_json = json.dumps(prompt_info)
+        print('\nSCHEDULER: Sending json request to Dalle Engine:', prompt_json)
         r = requests.post('http://dalle-backend:8080/dalle', json=prompt_json)
-        return r.json()
+        response = r.json()
+        print('\nSCHEDULER: send_request_to_dalle_engine - Response from Dalle Engine:', response)
+        return response
     except Exception as e:
-        print("SCHEDULER: send_request_to_dalle_engine Error:", e)
+        print("SCHEDULER: send_request_to_dalle_engine - Error:", e)
         return {'uuid': 'X'}
 
 
@@ -109,9 +112,6 @@ if __name__ == "__main__":
         time.sleep(1)
         queue_item = get_next_queue_request()
         if queue_item['uuid'] != 'X':
-            print("SCHEDULER: Sending request to dalle engine: {} ===== ({} images)\n\n".format(queue_item['text'],
-                                                                                                queue_item[
-                                                                                                    'num_images']))
             request_data = {'uuid': 'X'}
             while request_data['uuid'] == 'X':
                 request_data = send_request_to_dalle_engine(queue_item)

@@ -15,6 +15,11 @@
         font-family: "Lucida Sans", sans-serif;
     }
 
+    .container {
+        border-collapse: collapse;
+        width: 70%;
+    }
+
     img {
         border: 1px solid #ffffff;
         padding: 10px;
@@ -73,7 +78,7 @@
 <table>
 
     <tr>
-        <td>Enter a prompt:</td>
+        <td width="150">Enter a prompt:</td>
         <td colspan="2"><textarea type="text" rows="4" cols="50" id="prompt"/></textarea></td>
     </tr>
 
@@ -83,17 +88,15 @@
         </td>
 
         <td>
-            <select id="num_images">
-                <option selected value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-            </select>
+            <input type="radio" name="num_images" id="ni2" value="2" checked>2
+            <input type="radio" name="num_images" id="ni3" value="3">3
+            <input type="radio" name="num_images" id="ni4" value="4">4
+            <input type="radio" name="num_images" id="ni5" value="5">5
+            <input type="radio" name="num_images" id="ni6" value="6">6
         </td>
     </tr>
     <tr>
-        <td>
+        <td colspan="2">
             <button class="button-9" role="button" id="buttonGo" onclick="go()">Click to send request</button>
         </td>
     </tr>
@@ -107,9 +110,9 @@
 <div id="queue" class="container">Current queue:</div>
 <hr/>
 <p>
-<a class="label" href="library.html">See library of images created so far</a>
+<a class="label" target="_blank" rel="noopener noreferrer" href="library.html">See library of images created so far</a>
 &nbsp;
-<a class="label" href="inspiration.html">Get inspired for your prompts</a>
+<a class="label" target="_blank" rel="noopener noreferrer" href="inspiration.html">Get inspired for your prompts</a>
 </p>
 </body>
 </html>

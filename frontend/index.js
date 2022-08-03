@@ -5,9 +5,20 @@ const go = async () =>
     document.getElementById('status').innerText = "Creating images..."
     document.getElementById('buttonGo').innerText = "Creating images...";
     document.getElementById('buttonGo').enabled = false;
+
+    let numImages = '0';
+    const numImagesRadioGroup = document.getElementsByName("num_images");
+    for (let i = 0; i < numImagesRadioGroup.length; i++)
+    {
+        if (numImagesRadioGroup[i].checked)
+        {
+            numImages = numImagesRadioGroup[i].value;
+            break;
+        }
+    }
     const data = {
         text: document.getElementById("prompt").value,
-        num_images: parseInt(document.getElementById("num_images").value)
+        num_images: numImages
     }
 
     document.getElementById("output").innerText = "";
@@ -93,10 +104,10 @@ const displayQueue = async (queueList) =>
         foundMyUUID = queueList[0].uuid === global_currentUUID
 
         // The first item in the queue is the one that the AI is currently processing:
-        queueUI.innerHTML = `<p><b>Now creating ${queueList[0].num_images} images for${foundMyUUID ? " your request" : " "}: '${queueList[0].text}'...</b></p><br>Current queue:<br>`;
+        queueUI.innerHTML = `<p><b>Now creating ${queueList[0].num_images} images for${foundMyUUID ? " your request" : " "}:<br>'${queueList[0].text}'...</b></p><br>Current queue:<br>`;
 
         const processingDiv = document.createElement("div");
-        processingDiv.innerHTML = `<b>Now creating ${queueList[0].num_images} images for${foundMyUUID ? " your request" : " "}: '${queueList[0].text}'...</b>`;
+        processingDiv.innerHTML = `<b>Now creating ${queueList[0].num_images} images for${foundMyUUID ? " your request" : " "}:<br>'${queueList[0].text}'...</b>`;
 
         // If we are the first in the queue, our prompt is the one currently being processed by the AI
         // so highlight it:
@@ -207,4 +218,4 @@ const retrieveImages = async (library) =>
 }
 
 
-setInterval(updateQueue, 1000);
+setInterval(updateQueue, 2000);
