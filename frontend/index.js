@@ -1,10 +1,14 @@
 let global_currentUUID = '';
 
+let interval = null;
+let countDownInProgressFlag = false;
+
 const go = async () =>
 {
     document.getElementById('status').innerText = "Creating images..."
     document.getElementById('buttonGo').innerText = "Creating images...";
     document.getElementById('buttonGo').enabled = false;
+
 
     let numImages = '0';
     const numImagesRadioGroup = document.getElementsByName("num_images");
@@ -20,6 +24,7 @@ const go = async () =>
         text: document.getElementById("prompt").value,
         num_images: numImages
     }
+
 
     document.getElementById("output").innerText = "";
 
@@ -92,34 +97,38 @@ const updateQueue = async () =>
 
 const displayQueue = async (queueList) =>
 {
-    let foundMyUUID = false;
+    let myUUIDCurrentlyBeingProcessedFlag = false;
 
     const queueUI = document.getElementById("queue");
     if(queueList.length === 0)
     {
         queueUI.innerHTML = "Current queue: Empty<br>You'll be first if you submit a request!";
-    } else
+    }
+    else
     {
         // Is my request being currently processed?
-        foundMyUUID = queueList[0].uuid === global_currentUUID
+        myUUIDCurrentlyBeingProcessedFlag = queueList[0].uuid === global_currentUUID
+
 
         // The first item in the queue is the one that the AI is currently processing:
-        queueUI.innerHTML = `<p><b>Now creating ${queueList[0].num_images} images for${foundMyUUID ? " your request" : " "}:<br>'${queueList[0].text}'...</b></p><br>Current queue:<br>`;
+        queueUI.innerHTML = `<p><b>Now creating ${queueList[0].num_images} images for${myUUIDCurrentlyBeingProcessedFlag ? " your request" : " "}:<br>'${queueList[0].text}'...</b></p><br>Current queue:<br>`;
 
         const processingDiv = document.createElement("div");
-        processingDiv.innerHTML = `<b>Now creating ${queueList[0].num_images} images for${foundMyUUID ? " your request" : " "}:<br>'${queueList[0].text}'...</b>`;
+        processingDiv.innerHTML = `<b>Now creating ${queueList[0].num_images} images for${myUUIDCurrentlyBeingProcessedFlag ? " your request" : " "}:<br>'${queueList[0].text}'...</b>`;
 
         // If we are the first in the queue, our prompt is the one currently being processed by the AI
         // so highlight it:
-        if(foundMyUUID)
+        if(myUUIDCurrentlyBeingProcessedFlag)
         {
             // Mention this in the status message:
             document.getElementById('status').innerText = `Your request is being processed right now...`;
+            await startCountDown(queueList[0].num_images);
         }
 
         // Add the rest of the queue to the UI:
 
         let queuePosition = 1;
+        let imageCount = 0;
         if(queueList.length > 1)
         {
             const orderedList = document.createElement("ol");
@@ -128,15 +137,18 @@ const displayQueue = async (queueList) =>
                 let queueItem = queueList[queueIndex];
                 const listItem = document.createElement("li");
                 listItem.innerText = `${queueItem.text} - (${queueItem.num_images} images)`;
+                imageCount += queueItem.num_images;
 
                 // If the UUID matches the one returned to use by the AI, this is our request, so highlight it:
                 if(queueItem.uuid === global_currentUUID)
                 {
                     listItem.style.fontWeight = "bold";
                     listItem.style.backgroundColor = "lightgreen";
-                    foundMyUUID = true;
+                    myUUIDCurrentlyBeingProcessedFlag = true;
                     // Mention this in the status message:
                     document.getElementById('status').innerText = `Request queued - position: ${queuePosition}`;
+                    imageCount += queueItem.num_images;
+                    await startCountDown(imageCount);
                 }
                 orderedList.appendChild(listItem);
                 queuePosition += 1;
@@ -217,5 +229,28 @@ const retrieveImages = async (library) =>
     }
 }
 
+const startCountDown = async (imageCount) =>
+{
+    if(!countDownInProgressFlag)
+    {
+        countDownInProgressFlag = true;
+        document.getElementById("countdown_message").innerText = 'Images available in:';
+        document.getElementById("countdown").innerText = (imageCount * 8).toString();
+        interval = setInterval(() =>
+        {
+            const countDown = document.getElementById("countdown");
+            countDown.innerText = (parseInt(countDown.innerText) - 1).toString();
+            if(countDown.innerText === 'NaN' || parseInt(countDown.innerText) <= 0)
+            {
+                clearInterval(interval);
+                countDownInProgressFlag = false;
+                document.getElementById("countdown").innerText = "";
+                document.getElementById("countdown_message").innerText = "";
+                document.getElementById("buttonGo").innerText = "Click to send request";
+                document.getElementById("buttonGo").enabled = true;
+            }
+        }, 1000);
+    }
+}
 
 setInterval(updateQueue, 2000);
