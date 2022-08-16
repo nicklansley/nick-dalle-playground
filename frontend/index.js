@@ -63,6 +63,7 @@ const go = async () =>
  */
 const retrieveAndDisplayCurrentQueue = async () =>
 {
+    const output = document.getElementById("output");
     const queueResponse = await fetch('/queue_status', {
         method: 'GET',
         headers: {
@@ -90,7 +91,7 @@ const retrieveAndDisplayCurrentQueue = async () =>
         //So, if no images are being displayed, go get them!
         //However, do not this if the prompt has no value (i.e. when the page is first loaded)
         if(!foundQueueId
-            && document.getElementById("output").innerText === 'Retrieving images...'
+            && (output.innerText === 'Retrieving images...' || output.innerHTML === '' || output.innerText.startsWith('Images available in'))
             && document.getElementById("prompt").value.length > 0)
         {
             document.getElementById('status').innerText = `Image creation completed`;
@@ -98,7 +99,7 @@ const retrieveAndDisplayCurrentQueue = async () =>
             const library = await getLibrary();
             if(library)
             {
-                await displayImages(library);
+                await displayImages(library, output);
             }
         }
     }
@@ -135,7 +136,7 @@ const displayQueue = async (queueList) =>
 
         // If we are the first in the queue, our prompt is the one currently being processed by the AI
         // so highlight it:
-        if(myQueueIdIsCurrentlyBeingProcessedFlag)
+        if(myQueueIdIsCurrentlyBeingProcessedFlag && document.getElementById("output").innerText !== "Retrieving images...")
         {
             // Mention this in the status message:
             document.getElementById('status').innerText = `Your request is being processed right now...`;
@@ -236,12 +237,12 @@ const getLibrary = async () =>
 /**
  * Loop through the library looking for our queue_id and return/display the actual images.
  * @param library
+ * @param output
  * @returns {Promise<void>}
  */
-const displayImages = async (library) =>
+const displayImages = async (library, output) =>
 {
-    const output = document.getElementById("output");
-    output.innerHTML = "";
+    output.innerHTML = ""; //Empty of all child HTML ready for new images to be added.
     for (const libraryItem of library)
     {
         if(libraryItem.queue_id === global_currentQueueId)
@@ -268,12 +269,12 @@ const startCountDown = async (imageCount) =>
     if(!global_countdownRunning)
     {
         global_countdownValue = imageCount * SECS_PER_IMAGE;
-
-        document.getElementById("output").innerText = `Images available in about ${global_countdownValue} second${global_countdownValue === 1 ? '' : 's'}...`;
+        const output = document.getElementById("output");
+        output.innerText = `Images available in about ${global_countdownValue} second${global_countdownValue === 1 ? '' : 's'}...`;
 
         global_countdownTimerIntervalId = setInterval(() =>
         {
-            const countDownMessage = document.getElementById("output");
+
             if (global_countdownValue === 1)
             {
                 stopCountDown();
@@ -281,7 +282,7 @@ const startCountDown = async (imageCount) =>
             else
             {
                 global_countdownValue -= 1;
-                countDownMessage.innerText = `Images available in about ${global_countdownValue} second${global_countdownValue === 1 ? '' : 's'}...`;
+                output.innerText = `Images available in about ${global_countdownValue} second${global_countdownValue === 1 ? '' : 's'}...`;
             }
         }, 1000); // the countdown will trigger every 1 second
 
