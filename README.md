@@ -22,7 +22,7 @@ It is a simple, yet powerful, DALL-E emulator and incorporates a few extra featu
 # Remember this is 'up to' - not 'use all this amount all the time!'. WSL2 will only use what it needs to run its applications, and you have simply given it a high ceiling.
 memory=60GB 
 </pre>
-4. Read docker-compose.yml and adjust the two volumes to your needs - I use an 'S' RAID drive to store everything: 
+4. Read docker-compose.yml and adjust the two volumes to your needs - I use an 'S:' RAID drive to store everything: 
 <pre>
 volumes:
   app-cache-on-s:
@@ -44,8 +44,14 @@ volumes:
 # CMD python3 app.py --port 8080 --model_version mini Mega Mega_full
 CMD python3 app.py --port 8080 --model_version Mega_full
 </pre>
-6. Run docker-compose up - it will start the backend and the UI. Downloading the container images is a one-time operation but takes time and several GB of download!
-7. The backend will need to go and get the model in first run - 16 GB in total.
+6. Run docker-compose to build the project then start the backend, scheduler and frontend. Downloading the container images is a one-time operation but takes time and several GB of download!
+
+    In the docker-compose command below, I use -d to disconnect
+and return to the terminal prompt after the containers are started. I use --build to look for changes and build/restart the images if they are not already built and up to date.
+<pre>
+docker-compose up -d --build 
+</pre>
+7. The backend will need to go and get the model in first run - again several GB of data to download.
 8. The backend takes about 5 mins if the data has already been downloaded. In my experience the startup console includes many of these out of memory errors. Don't despair if you see them! As long as the container is not being killed and restarted it will eventually load the model.
 <pre>2022-08-16 07:41:00.378664: E external/org_tensorflow/tensorflow/stream_executor/cuda/cuda_driver.cc:796] failed to alloc 1073741824 bytes on host: CUDA_ERROR_OUT_OF_MEMORY: out of memory
 </pre>
