@@ -89,8 +89,9 @@ const retrieveAndDisplayCurrentQueue = async () =>
         //If we did not find our queue_id then processing of our request must be completed.
         //So, if no images are being displayed, go get them!
         //However, do not this if the prompt has no value (i.e. when the page is first loaded)
-        const output = document.getElementById("output");
-        if(!foundQueueId && output.innerHTML.length === 0 && document.getElementById("prompt").value.length > 0)
+        if(!foundQueueId
+            && document.getElementById("output").innerText === 'Retrieving images...'
+            && document.getElementById("prompt").value.length > 0)
         {
             document.getElementById('status').innerText = `Image creation completed`;
             stopCountDown();
@@ -239,6 +240,8 @@ const getLibrary = async () =>
  */
 const displayImages = async (library) =>
 {
+    const output = document.getElementById("output");
+    output.innerHTML = "";
     for (const libraryItem of library)
     {
         if(libraryItem.queue_id === global_currentQueueId)
@@ -248,7 +251,7 @@ const displayImages = async (library) =>
                 const image = document.createElement("img");
                 image.src = image_entry;
                 image.alt = libraryItem.text_prompt;
-                document.getElementById("output").appendChild(image);
+                output.appendChild(image);
             }
         }
     }
@@ -266,12 +269,11 @@ const startCountDown = async (imageCount) =>
     {
         global_countdownValue = imageCount * SECS_PER_IMAGE;
 
-        document.getElementById("countdown_message").innerText = 'Images available in:';
-        document.getElementById("countdown").innerText = global_countdownValue.toString();
+        document.getElementById("output").innerText = `Images available in about ${global_countdownValue} second${global_countdownValue === 1 ? '' : 's'}...`;
 
         global_countdownTimerIntervalId = setInterval(() =>
         {
-            const countDown = document.getElementById("countdown");
+            const countDownMessage = document.getElementById("output");
             if (global_countdownValue === 1)
             {
                 stopCountDown();
@@ -279,7 +281,7 @@ const startCountDown = async (imageCount) =>
             else
             {
                 global_countdownValue -= 1;
-                countDown.innerText = global_countdownValue.toString();
+                countDownMessage.innerText = `Images available in about ${global_countdownValue} second${global_countdownValue === 1 ? '' : 's'}...`;
             }
         }, 1000); // the countdown will trigger every 1 second
 
@@ -293,8 +295,7 @@ const startCountDown = async (imageCount) =>
 const stopCountDown = () =>
 {
     clearInterval(global_countdownTimerIntervalId);
-    document.getElementById("countdown").innerText = "";
-    document.getElementById("countdown_message").innerText = "";
+    document.getElementById("output").innerHTML = "Retrieving images...";
     document.getElementById("buttonGo").innerText = "Click to send request";
     document.getElementById("buttonGo").enabled = true;
     global_countdownRunning = false;

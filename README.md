@@ -70,6 +70,15 @@ The UI is super-simple and is designed to be easily adapted to your needs. I've 
 
 I've written the scheduler and frontend web server in Python. The Scheduler uses a simple FIFO queue to manage the prompts with Redis as the queuing database. I've used a class based on BaseHTTPRequestHandler to handle the requests from the UI.
 
+
+### Library Page
+The UI include a library page where you can view the images created so far. If you want to empty the library, simply go to the directory storing 'library.json' and set of directories with UUID names, and delete them.
+If you want to delete a specific image, double-click it on the library page, and select 'OK' to the alert prompt.
+
+The library page is useful for observing how many seconds it took to generate each image, as it is displayed above each group of images. My PC always has it at around 8 secs/image. If yours is different, 
+you can adjust the value in the JavaScript a the top of index.js - change the very first line - const SECS_PER_IMAGE = 8; - to the number of seconds per image you are experiencing.
+This will make the countdown on the UI more accurate when waiting for your prompt to be processed.
+
 ## API
 The API is a simple RESTful API that can be used by the UI to send requests to the backend.
 
