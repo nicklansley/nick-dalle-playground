@@ -52,7 +52,7 @@ and return to the terminal prompt after the containers are started. I use --buil
 docker-compose up -d --build 
 </pre>
 7. The backend will need to go and get the model in first run - again several GB of data to download.
-8. The backend takes about 5 mins if the data has already been downloaded. In my experience the startup console includes many of these out of memory errors. Don't despair if you see them! As long as the container is not being killed and restarted it will eventually load the model.
+8. The backend takes about 5 mins to become ready if the data has already been downloaded. In my experience the startup console includes many of these out of memory errors. Don't despair if you see them! As long as the container is not being killed and restarted it will eventually load the model.
 <pre>2022-08-16 07:41:00.378664: E external/org_tensorflow/tensorflow/stream_executor/cuda/cuda_driver.cc:796] failed to alloc 1073741824 bytes on host: CUDA_ERROR_OUT_OF_MEMORY: out of memory
 </pre>
 9. You can tell the model is fully loaded when the backend console says:
