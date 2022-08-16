@@ -37,13 +37,13 @@ def generate_images_api():
         print(f"Received request_data: {request_data}")
         text_prompt = request_data["text"]
         num_images = request_data["num_images"]
-        uuid_value = request_data["uuid"]
+        queue_id = request_data["queue_id"]
 
         generated_imgs = dalle_model.generate_images(text_prompt, num_images)
         print(f"Generated {len(generated_imgs)} images")
         end = time.time()
         time_taken = end - start
-        save_images_to_library(text_prompt, generated_imgs, uuid_value, time_taken)
+        save_images_to_library(text_prompt, generated_imgs, queue_id, time_taken)
 
         # The data in this array is the base64 encoded image data but is not used
         # at the moment because the frontend is getting the images from the library
@@ -58,7 +58,7 @@ def generate_images_api():
 
         response = {
             "success": True,
-            "uuid": uuid_value,
+            "queue_id": queue_id,
             "time_taken": time_taken
         }
         return json.dumps(response)
@@ -77,19 +77,19 @@ def health_check():
     return jsonify(success=True)
 
 
-def save_images_to_library(text_prompt, generated_imgs, uuid_value, time_taken):
-    library_dir_name = os.path.join('/library', uuid_value)
+def save_images_to_library(text_prompt, generated_imgs, queue_id, time_taken):
+    library_dir_name = os.path.join('/library', queue_id)
     library_dir_name = library_dir_name.replace('\n', ' ').replace('\r', ' ')
     try:
         os.makedirs(library_dir_name)
     except FileExistsError:
         pass
 
-    with open(os.path.join(library_dir_name, f'{uuid_value}.idx'), "w", encoding="utf8") as outfile:
+    with open(os.path.join(library_dir_name, f'{queue_id}.idx'), "w", encoding="utf8") as outfile:
         metadata = {
             "text_prompt": text_prompt,
             "num_images": len(generated_imgs),
-            "uuid": uuid_value,
+            "queue_id": queue_id,
             "time_taken": time_taken
         }
         outfile.write(json.dumps(metadata))
@@ -97,7 +97,7 @@ def save_images_to_library(text_prompt, generated_imgs, uuid_value, time_taken):
     for idx, img in enumerate(generated_imgs):
         img.save(os.path.join(library_dir_name, f'{uuid.uuid4()}.png'), format="PNG")
 
-    print(f"Saved images to library {uuid_value} from text prompt [{text_prompt}]")
+    print(f"Saved images to library {queue_id} from text prompt [{text_prompt}]")
 
 
 with app.app_context():

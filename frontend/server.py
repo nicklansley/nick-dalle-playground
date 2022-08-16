@@ -15,7 +15,7 @@ def update_library_catalogue():
     library = []
     library_entry = {
         "text_prompt": "",
-        "uuid": "",
+        "queue_id": "",
         "generated_images": []
     }
     for root, dirs, files in os.walk("/app/library", topdown=False):
@@ -27,7 +27,7 @@ def update_library_catalogue():
                     with open(idx_file_name, "r", encoding="utf8") as infile:
                         metadata = json.loads(infile.read())
                         library_entry["text_prompt"] = metadata["text_prompt"]
-                        library_entry["uuid"] = metadata["uuid"]
+                        library_entry["queue_id"] = metadata["queue_id"]
                         library_entry["creation_unixtime"] = unix_time
                         library_entry["process_time_secs"] = metadata["time_taken"]
                         library_entry["generated_images"] = []
@@ -39,7 +39,7 @@ def update_library_catalogue():
         for image_name in files:
             if image_name.endswith('.jpeg') or image_name.endswith('.jpg') or image_name.endswith('.png'):
                 for library_entry in library:
-                    if library_entry["uuid"] in root:
+                    if library_entry["queue_id"] in root:
                         image_file_path = os.path.join(root, image_name).replace('/app/', '')
                         if image_file_path not in library_entry["generated_images"]:
                             library_entry["generated_images"].append(image_file_path)
@@ -115,11 +115,11 @@ class RelayServer(BaseHTTPRequestHandler):
     def queue_request_to_redis(self, data):
         try:
             r = redis.Redis(host='dalle-scheduler', port=6379, db=0, password='hellothere')
-            data['uuid'] = str(uuid.uuid4())
+            data['queue_id'] = str(uuid.uuid4())
             data['num_images'] = int(data['num_images'])
             r.lpush('queue', json.dumps(data))
-            print("\nFRONTEND: Request queued to redis with uuid:", data['uuid'])
-            return data['uuid']
+            print("\nFRONTEND: Request queued to redis with queue_id:", data['queue_id'])
+            return data['queue_id']
         except Exception as e:
             print("\nFRONTEND: queue_request_to_redis Error:", e)
             return 'X'

@@ -1,8 +1,13 @@
-let global_currentUUID = '';
+const SECS_PER_IMAGE = 8; // depends on GPU image creation speed - 8 works well for me
+let global_currentQueueId = '';
+let global_countdownTimerIntervalId = null;
+let global_countdownValue = 0;
+let global_countdownRunning = false;
 
-let interval = null;
-let countDownInProgressFlag = false;
-
+/**
+ * Send the text prompt to the AI and get a queue_id back in 'queue_id' which will be used to track the request.
+ * @returns {Promise<void>}
+ */
 const go = async () =>
 {
     document.getElementById('status').innerText = "Creating images..."
@@ -40,7 +45,7 @@ const go = async () =>
     if(rawResponse.status === 200)
     {
         const queueConfirmation = await rawResponse.json();
-        global_currentUUID = queueConfirmation.queue_id;
+        global_currentQueueId = queueConfirmation.queue_id;
         document.getElementById('status').innerText = `Request queued - check the queue for position`;
     }
     else
@@ -52,7 +57,11 @@ const go = async () =>
 }
 
 
-const updateQueue = async () =>
+/**
+ * Retrieve the queue and display it.
+ * @returns {Promise<void>}
+ */
+const retrieveAndDisplayCurrentQueue = async () =>
 {
     const queueResponse = await fetch('/queue_status', {
         method: 'GET',
@@ -67,27 +76,28 @@ const updateQueue = async () =>
         const queueData = await queueResponse.json();
         await displayQueue(queueData);
 
-        //Look for our UUID in the queue:
-        let foundUUID = false;
+        //Look for our Queue ID in the queue:
+        let foundQueueId = false;
         for(const queueItem of queueData)
         {
-            if(queueItem.uuid === global_currentUUID)
+            if(queueItem.queue_id === global_currentQueueId)
             {
-               foundUUID = true;
+               foundQueueId = true;
                break;
             }
         }
-        //If we did not find our UUID then processing of our request must be completed.
+        //If we did not find our queue_id then processing of our request must be completed.
         //So, if no images are being displayed, go get them!
         //However, do not this if the prompt has no value (i.e. when the page is first loaded)
         const output = document.getElementById("output");
-        if(!foundUUID && output.innerHTML.length === 0 && document.getElementById("prompt").value.length > 0)
+        if(!foundQueueId && output.innerHTML.length === 0 && document.getElementById("prompt").value.length > 0)
         {
             document.getElementById('status').innerText = `Image creation completed`;
-            const library = await listLibrary();
+            stopCountDown();
+            const library = await getLibrary();
             if(library)
             {
-                await retrieveImages(library);
+                await displayImages(library);
             }
         }
     }
@@ -95,9 +105,15 @@ const updateQueue = async () =>
 
 }
 
+
+/**
+ * Display the queue.
+ * @param queueList
+ * @returns {Promise<void>}
+ */
 const displayQueue = async (queueList) =>
 {
-    let myUUIDCurrentlyBeingProcessedFlag = false;
+    let myQueueIdIsCurrentlyBeingProcessedFlag = false;
 
     const queueUI = document.getElementById("queue");
     if(queueList.length === 0)
@@ -107,18 +123,18 @@ const displayQueue = async (queueList) =>
     else
     {
         // Is my request being currently processed?
-        myUUIDCurrentlyBeingProcessedFlag = queueList[0].uuid === global_currentUUID
+        myQueueIdIsCurrentlyBeingProcessedFlag = queueList[0].queue_id === global_currentQueueId
 
 
         // The first item in the queue is the one that the AI is currently processing:
-        queueUI.innerHTML = `<p><b>Now creating ${queueList[0].num_images} images for${myUUIDCurrentlyBeingProcessedFlag ? " your request" : " "}:<br>'${queueList[0].text}'...</b></p><br>Current queue:<br>`;
+        queueUI.innerHTML = `<p><b>Now creating ${queueList[0].num_images} images for${myQueueIdIsCurrentlyBeingProcessedFlag ? " your request" : " "}:<br>'${queueList[0].text}'...</b></p><br>Current queue:<br>`;
 
         const processingDiv = document.createElement("div");
-        processingDiv.innerHTML = `<b>Now creating ${queueList[0].num_images} images for${myUUIDCurrentlyBeingProcessedFlag ? " your request" : " "}:<br>'${queueList[0].text}'...</b>`;
+        processingDiv.innerHTML = `<b>Now creating ${queueList[0].num_images} images for${myQueueIdIsCurrentlyBeingProcessedFlag ? " your request" : " "}:<br>'${queueList[0].text}'...</b>`;
 
         // If we are the first in the queue, our prompt is the one currently being processed by the AI
         // so highlight it:
-        if(myUUIDCurrentlyBeingProcessedFlag)
+        if(myQueueIdIsCurrentlyBeingProcessedFlag)
         {
             // Mention this in the status message:
             document.getElementById('status').innerText = `Your request is being processed right now...`;
@@ -139,12 +155,12 @@ const displayQueue = async (queueList) =>
                 listItem.innerText = `${queueItem.text} - (${queueItem.num_images} images)`;
                 imageCount += queueItem.num_images;
 
-                // If the UUID matches the one returned to use by the AI, this is our request, so highlight it:
-                if(queueItem.uuid === global_currentUUID)
+                // If the queue_id matches the one returned to use by the AI, this is our request, so highlight it:
+                if(queueItem.queue_id === global_currentQueueId)
                 {
                     listItem.style.fontWeight = "bold";
                     listItem.style.backgroundColor = "lightgreen";
-                    myUUIDCurrentlyBeingProcessedFlag = true;
+                    myQueueIdIsCurrentlyBeingProcessedFlag = true;
                     // Mention this in the status message:
                     document.getElementById('status').innerText = `Request queued - position: ${queuePosition}`;
                     imageCount += queueItem.num_images;
@@ -164,8 +180,12 @@ const displayQueue = async (queueList) =>
 
 }
 
-
-const listLibrary = async () =>
+/**
+ * Retrieve the library of images in JSON format, which we will use to display the images
+ * where the queue_id returned by the AI matches the queue_id of the request we are currently processing.
+ * @returns {Promise<boolean|*[]|any>}
+ */
+const getLibrary = async () =>
 {
     let rawResponse;
     document.getElementById('status').innerText = "Reading library...";
@@ -212,11 +232,16 @@ const listLibrary = async () =>
 }
 
 
-const retrieveImages = async (library) =>
+/**
+ * Loop through the library looking for our queue_id and return/display the actual images.
+ * @param library
+ * @returns {Promise<void>}
+ */
+const displayImages = async (library) =>
 {
     for (const libraryItem of library)
     {
-        if(libraryItem.uuid === global_currentUUID)
+        if(libraryItem.queue_id === global_currentQueueId)
         {
             for (const image_entry of libraryItem.generated_images)
             {
@@ -229,28 +254,55 @@ const retrieveImages = async (library) =>
     }
 }
 
+/**
+ * Start the countdown timer to indicate when our images should be ready
+ * @param imageCount
+ * @param queuePosition
+ * @returns {Promise<void>}
+ */
 const startCountDown = async (imageCount) =>
 {
-    if(!countDownInProgressFlag)
+    if(!global_countdownRunning)
     {
-        countDownInProgressFlag = true;
+        global_countdownValue = imageCount * SECS_PER_IMAGE;
+
         document.getElementById("countdown_message").innerText = 'Images available in:';
-        document.getElementById("countdown").innerText = (imageCount * 8).toString();
-        interval = setInterval(() =>
+        document.getElementById("countdown").innerText = global_countdownValue.toString();
+
+        global_countdownTimerIntervalId = setInterval(() =>
         {
             const countDown = document.getElementById("countdown");
-            countDown.innerText = (parseInt(countDown.innerText) - 1).toString();
-            if(countDown.innerText === 'NaN' || parseInt(countDown.innerText) <= 0)
+            if (global_countdownValue === 1)
             {
-                clearInterval(interval);
-                countDownInProgressFlag = false;
-                document.getElementById("countdown").innerText = "";
-                document.getElementById("countdown_message").innerText = "";
-                document.getElementById("buttonGo").innerText = "Click to send request";
-                document.getElementById("buttonGo").enabled = true;
+                stopCountDown();
             }
-        }, 1000);
+            else
+            {
+                global_countdownValue -= 1;
+                countDown.innerText = global_countdownValue.toString();
+            }
+        }, 1000); // the countdown will trigger every 1 second
+
+        global_countdownRunning = true;
     }
 }
 
-setInterval(updateQueue, 2000);
+/**
+ *
+ */
+const stopCountDown = () =>
+{
+    clearInterval(global_countdownTimerIntervalId);
+    document.getElementById("countdown").innerText = "";
+    document.getElementById("countdown_message").innerText = "";
+    document.getElementById("buttonGo").innerText = "Click to send request";
+    document.getElementById("buttonGo").enabled = true;
+    global_countdownRunning = false;
+}
+
+/**
+ * Set a timer to go and get the queued prompt requests from the server every 2 seconds
+ * NB: Ths does not put a strain on the (python) web server as turnaround is only 10-20 milliseconds
+ * so evn if a lot of people are using the service simultaneously it easily copes (I used apache AB to test!)
+ */
+setInterval(retrieveAndDisplayCurrentQueue, 2000);

@@ -18,11 +18,11 @@ def get_next_queue_request():
             queue_list.reverse()
             return queue_list[0]
         else:
-            return {'uuid': 'X'}
+            return {'queue_id': 'X'}
 
     except Exception as e:
         print("SCHEDULER: get_next_queue_request Error:", e)
-        return {'uuid': 'X'}
+        return {'queue_id': 'X'}
 
 
 def delete_request_from_redis_queue(queue_data):
@@ -49,7 +49,7 @@ def send_request_to_dalle_engine(prompt_info):
         return response
     except Exception as e:
         print("SCHEDULER: send_request_to_dalle_engine - Error:", e)
-        return {'uuid': 'X'}
+        return {'queue_id': 'X'}
 
 
 def update_library_catalogue():
@@ -57,7 +57,7 @@ def update_library_catalogue():
     library = []
     library_entry = {
         "text_prompt": "",
-        "uuid": "",
+        "queue_id": "",
         "generated_images": []
     }
     for root, dirs, files in os.walk("/app/library", topdown=False):
@@ -69,7 +69,7 @@ def update_library_catalogue():
                     with open(idx_file_name, "r", encoding="utf8") as infile:
                         metadata = json.loads(infile.read())
                         library_entry["text_prompt"] = metadata["text_prompt"]
-                        library_entry["uuid"] = metadata["uuid"]
+                        library_entry["queue_id"] = metadata["queue_id"]
                         library_entry["creation_unixtime"] = unix_time
                         library_entry["process_time_secs"] = metadata["time_taken"]
                         library_entry["generated_images"] = []
@@ -81,7 +81,7 @@ def update_library_catalogue():
         for image_name in files:
             if image_name.endswith('.jpeg') or image_name.endswith('.jpg') or image_name.endswith('.png'):
                 for library_entry in library:
-                    if library_entry["uuid"] in root:
+                    if library_entry["queue_id"] in root:
                         image_file_path = os.path.join(root, image_name).replace('/app/', '')
                         if image_file_path not in library_entry["generated_images"]:
                             library_entry["generated_images"].append(image_file_path)
@@ -111,15 +111,15 @@ if __name__ == "__main__":
     while True:
         time.sleep(1)
         queue_item = get_next_queue_request()
-        if queue_item['uuid'] != 'X':
-            request_data = {'uuid': 'X'}
-            while request_data['uuid'] == 'X':
+        if queue_item['queue_id'] != 'X':
+            request_data = {'queue_id': 'X'}
+            while request_data['queue_id'] == 'X':
                 request_data = send_request_to_dalle_engine(queue_item)
-                if request_data['uuid'] == 'X':
+                if request_data['queue_id'] == 'X':
                     print("SCHEDULER: Error sending request to dalle engine, retrying...")
                     time.sleep(1)
 
-            if request_data['success'] and request_data['uuid'] == queue_item['uuid']:
+            if request_data['success'] and request_data['queue_id'] == queue_item['queue_id']:
                 delete_request_from_redis_queue(queue_item)
                 update_library_catalogue()
                 print("SCHEDULER: Processing complete - library updated\n\n")
