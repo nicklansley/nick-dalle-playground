@@ -70,6 +70,7 @@ def update_library_catalogue():
                         metadata = json.loads(infile.read())
                         library_entry["text_prompt"] = metadata["text_prompt"]
                         library_entry["queue_id"] = metadata["queue_id"]
+                        library_entry["seed"] = metadata["seed"]
                         library_entry["creation_unixtime"] = unix_time
                         library_entry["process_time_secs"] = metadata["time_taken"]
                         library_entry["generated_images"] = []

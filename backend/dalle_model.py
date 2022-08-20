@@ -77,15 +77,26 @@ class DalleModel:
         tokenized_prompt = self.processor([prompt])
         return replicate(tokenized_prompt)
 
-    def generate_images(self, prompt: str, num_predictions: int):
+    def generate_images(self, prompt: str, num_predictions: int, random_seed: int = 0):
         tokenized_prompt = self.tokenize_prompt(prompt)
 
-        # create a random key
-        seed = random.randint(0, 2 ** 32 - 1)
+        # create a random key using the random seed, or generate a new one if no seed is provided (random_seed  = 0)
+        if random_seed == 0:
+            seed = random.randint(0, 2 ** 32 - 1)
+        else:
+            seed = random_seed
+
         key = jax.random.PRNGKey(seed)
 
+        output = {
+            "prompt": prompt,
+            "seed": seed,
+            "num_predictions": num_predictions,
+            "images": []
+        }
+
+
         # generate images
-        images = []
         for i in range(max(num_predictions // jax.device_count(), 1)):
             # get a new key
             key, subkey = jax.random.split(key)
@@ -108,6 +119,6 @@ class DalleModel:
             decoded_images = p_decode(self.vqgan, encoded_images, self.vqgan_params)
             decoded_images = decoded_images.clip(0.0, 1.0).reshape((-1, 256, 256, 3))
             for img in decoded_images:
-                images.append(Image.fromarray(np.asarray(img * 255, dtype=np.uint8)))
+                output['images'].append(Image.fromarray(np.asarray(img * 255, dtype=np.uint8)))
 
-        return images
+        return output

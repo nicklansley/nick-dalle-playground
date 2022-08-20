@@ -50,33 +50,35 @@ const retrieveImages = async () =>
 
     for (const libraryItem of library)
     {
-        if(searchText.length === 0 || libraryItem.text_prompt.includes(searchText))
+        if(searchText.length === 0 || libraryItem['text_prompt'].includes(searchText))
         {
-            if(libraryItem.generated_images.length > 0)
+            if(libraryItem['generated_images'].length > 0)
             {
                 libraryEntryCount += 1;
                 const hr = document.createElement("hr");
                 document.getElementById("output").appendChild(hr);
 
                 const h3 = document.createElement("h3");
-                let creationDate = new Date(`${libraryItem.creation_unixtime}`.split(".")[0] * 1000);
-                h3.innerHTML = `<i>${libraryItem.text_prompt}</i><br><small>${creationDate.toLocaleString()} - `;
-                h3.innerHTML += `processing took ${Math.round(libraryItem.process_time_secs)} seconds (${Math.round(libraryItem.process_time_secs / libraryItem.generated_images.length)} secs/image)</small>`;
+                let creationDate = new Date(`${libraryItem['creation_unixtime']}`.split(".")[0] * 1000);
+                h3.innerHTML = `<i>${libraryItem['text_prompt']}</i><br>`;
+                h3.innerHTML += `<small>${creationDate.toLocaleString()}</small><br>`;
+                h3.innerHTML += `<small>chosen seed: ${libraryItem['seed']}</small><br>`;
+                h3.innerHTML += `<small>processing took ${libraryItem['process_time_secs'].toFixed(2)} seconds (${(libraryItem['process_time_secs'] / libraryItem['generated_images'].length).toFixed((2))} secs/image)</small>`;
                 document.getElementById("output").appendChild(h3);
 
-                for (const image_entry of libraryItem.generated_images)
+                for (const image_entry of libraryItem['generated_images'])
                 {
                     imageCount += 1;
                     const imageName = image_entry.split("/")[2];
                     const image = document.createElement("img");
                     image.src = image_entry;
                     image.id = imageName.split('.')[0];
-                    image.alt = libraryItem.text_prompt;
+                    image.alt = libraryItem['text_prompt'];
 
                     // Add data-image-details attribute to image using the
                     // libraryItem object with generated_images list deleted.
                     const dataImageDetails = JSON.parse(JSON.stringify(libraryItem));
-                    delete dataImageDetails.generated_images;
+                    delete dataImageDetails['generated_images'];
                     dataImageDetails.path = image_entry;
                     image.setAttribute('data-image-details', JSON.stringify(dataImageDetails));
 

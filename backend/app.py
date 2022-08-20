@@ -39,16 +39,21 @@ def generate_images_api():
         num_images = request_data["num_images"]
         queue_id = request_data["queue_id"]
 
-        generated_imgs = dalle_model.generate_images(text_prompt, num_images)
-        print(f"Generated {len(generated_imgs)} images")
+        try:
+            seed = int(request_data["seed"])
+        except KeyError:
+            seed = 0
+
+        output = dalle_model.generate_images(text_prompt, num_images, seed)
+        print(f"Generated {len(output['images'])} images")
         end = time.time()
         time_taken = end - start
-        save_images_to_library(text_prompt, generated_imgs, queue_id, time_taken)
+        save_images_to_library(output['prompt'], output['images'], queue_id, time_taken, output['seed'])
 
         # The data in this array is the base64 encoded image data but is not used
         # at the moment because the frontend is getting the images from the library
         generated_images = []
-        for idx, img in enumerate(generated_imgs):
+        for idx, img in enumerate(output['images']):
             buffered = BytesIO()
             img.save(buffered, format="PNG")
             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
@@ -59,7 +64,8 @@ def generate_images_api():
         response = {
             "success": True,
             "queue_id": queue_id,
-            "time_taken": time_taken
+            "time_taken": time_taken,
+            "seed": seed
         }
         return json.dumps(response)
     except Exception as e:
@@ -77,7 +83,7 @@ def health_check():
     return jsonify(success=True)
 
 
-def save_images_to_library(text_prompt, generated_imgs, queue_id, time_taken):
+def save_images_to_library(text_prompt, generated_imgs, queue_id, time_taken, seed):
     library_dir_name = os.path.join('/library', queue_id)
     library_dir_name = library_dir_name.replace('\n', ' ').replace('\r', ' ')
     try:
@@ -90,7 +96,8 @@ def save_images_to_library(text_prompt, generated_imgs, queue_id, time_taken):
             "text_prompt": text_prompt,
             "num_images": len(generated_imgs),
             "queue_id": queue_id,
-            "time_taken": time_taken
+            "time_taken": round(time_taken, 2),
+            "seed": seed
         }
         outfile.write(json.dumps(metadata))
 

@@ -1,4 +1,4 @@
-const SECS_PER_IMAGE = 8; // depends on GPU image creation speed - 8 works well for me
+const SECS_PER_IMAGE = 6; // depends on GPU image creation speed - 6 works well for me
 let global_currentQueueId = '';
 let global_countdownTimerIntervalId = null;
 let global_countdownValue = 0;
@@ -27,7 +27,8 @@ const go = async () =>
     }
     const data = {
         text: document.getElementById("prompt").value,
-        num_images: numImages
+        num_images: numImages,
+        seed: document.getElementById("seed").value
     }
 
 

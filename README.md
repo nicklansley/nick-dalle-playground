@@ -7,7 +7,8 @@ It is a simple, yet powerful, DALL-E emulator and incorporates a few extra featu
 * A simple API called by the JavaScript in the UI to send prompt requests, check the queue and see the library of results
 * docker compose volumes can be adjusted to save the pretrained image model and output library of images on a disk outside of Docker.
 * The backend is written in Python and the UI is written in JavaScript.
-* Output images are in PNG format
+* Output images are in PNG format.
+* You can decide the seed value from 0 to 2^32 (4294967296) for the random number generator. If you use the same number with the same prompt you'll get the same images out! If you use a seed of value 0 then the backend will choose a random seed value. Library page shows the seed that was chosen.
 
 ## 10 steps to Fast-start
 1. Make sure you have an NVidia graphics card and a NVidia's GPU driver installed. This is how the backend will render the images.
@@ -92,12 +93,13 @@ Type: POST
 Body:
 * text: the prompt text to be rendered
 * num_images: the number of images to be rendered. Can be 2, 4, 6, or 8 as a string
-
+* seed: the seed value for the random number generator. Can be any integer up to 2-to-the-power-32 (4294967296) - use 0 for internally generated random seed
 Body example:
 <pre>
 {
     "text":"the red squirrel dances in the moonlight, feet off the ground, backlit, photograph, golden hour, high shutter speed", 
-    "num_images":"6" 
+    "num_images":"6"
+    "seed":12345
 }
 </pre>
 

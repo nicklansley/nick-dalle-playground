@@ -117,6 +117,7 @@ class RelayServer(BaseHTTPRequestHandler):
             r = redis.Redis(host='dalle-scheduler', port=6379, db=0, password='hellothere')
             data['queue_id'] = str(uuid.uuid4())
             data['num_images'] = int(data['num_images'])
+            data['seed'] = int(data['seed'])
             r.lpush('queue', json.dumps(data))
             print("\nFRONTEND: Request queued to redis with queue_id:", data['queue_id'])
             return data['queue_id']
