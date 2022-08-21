@@ -31,7 +31,7 @@ const go = async () =>
         seed: document.getElementById("seed").value
     }
 
-    if(document.body.innerText.includes("gen_top_p"))
+    if(document.body.innerText.includes("TOP K:"))
     {
         //We have the advanced options incoming for the request from advanced.html
         data['gen_top_k'] = document.getElementById("gen_top_k").value;
