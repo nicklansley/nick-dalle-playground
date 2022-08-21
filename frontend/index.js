@@ -31,6 +31,20 @@ const go = async () =>
         seed: document.getElementById("seed").value
     }
 
+    if(document.body.innerText.includes("gen_top_p"))
+    {
+        //We have the advanced options incoming for the request from advanced.html
+        data['gen_top_k'] = document.getElementById("gen_top_k").value;
+        if(data['gen_top_k'] === '') data['gen_top_k'] = null;
+
+        data['gen_top_p'] = document.getElementById("gen_top_p").value;
+        if(data['gen_top_p'] === '') data['gen_top_p'] = null;
+
+        data['temperature'] = document.getElementById("temperature").value;
+        if(data['temperature'] === '') data['temperature'] = null;
+
+        data['condition_scale'] = document.getElementById("condition_scale").value;
+    }
 
     document.getElementById("output").innerText = "";
 

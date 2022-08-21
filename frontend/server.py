@@ -118,6 +118,42 @@ class RelayServer(BaseHTTPRequestHandler):
             data['queue_id'] = str(uuid.uuid4())
             data['num_images'] = int(data['num_images'])
             data['seed'] = int(data['seed'])
+
+            # These are optional parameters
+            try:
+                if not data['gen_top_k']:
+                    pass
+                else:
+                    data['gen_top_k'] = float(data['gen_top_k'])
+            except KeyError:
+                pass
+
+            try:
+                if not data['gen_top_p']:
+                    pass
+                else:
+                    data['gen_top_p'] = float(data['gen_top_p'])
+            except KeyError:
+                pass
+
+            try:
+                if not data['temperature']:
+                    pass
+                else:
+                    data['temperature'] = float(data['temperature'])
+                if data['temperature'] == 0.0:
+                    data['temperature'] = 0.01
+            except KeyError:
+                pass
+
+            try:
+                if not data['condition_scale']:
+                    pass
+                else:
+                    data['condition_scale'] = float(data['condition_scale'])
+            except KeyError:
+                pass
+
             r.lpush('queue', json.dumps(data))
             print("\nFRONTEND: Request queued to redis with queue_id:", data['queue_id'])
             return data['queue_id']

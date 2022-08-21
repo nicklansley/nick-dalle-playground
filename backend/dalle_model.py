@@ -77,7 +77,15 @@ class DalleModel:
         tokenized_prompt = self.processor([prompt])
         return replicate(tokenized_prompt)
 
-    def generate_images(self, prompt: str, num_predictions: int, random_seed: int = 0):
+    def generate_images(self,
+                        prompt: str,
+                        num_predictions: int,
+                        random_seed: int = 0,
+                        gen_top_k: float = GEN_TOP_K,
+                        gen_top_p: float = GEN_TOP_P,
+                        temperature: float = TEMPERATURE,
+                        condition_scale: float = COND_SCALE
+                        ):
         tokenized_prompt = self.tokenize_prompt(prompt)
 
         # create a random key using the random seed, or generate a new one if no seed is provided (random_seed  = 0)
@@ -92,6 +100,10 @@ class DalleModel:
             "prompt": prompt,
             "seed": seed,
             "num_predictions": num_predictions,
+            "gen_top_k": gen_top_k,
+            "gen_top_p": gen_top_p,
+            "temperature": temperature,
+            "condition_scale": condition_scale,
             "images": []
         }
 
@@ -105,10 +117,10 @@ class DalleModel:
                 tokenized_prompt,
                 shard_prng_key(subkey),
                 self.params,
-                GEN_TOP_K,
-                GEN_TOP_P,
-                TEMPERATURE,
-                COND_SCALE,
+                gen_top_k,
+                gen_top_p,
+                temperature,
+                condition_scale,
                 self.model
             )
 

@@ -18,6 +18,7 @@ def get_next_queue_request():
             queue_list.reverse()
             return queue_list[0]
         else:
+            # Return an 'empty' queue item which will be used to stop the scheduler trying to delete a non-existent queue item
             return {'queue_id': 'X'}
 
     except Exception as e:
@@ -113,16 +114,11 @@ if __name__ == "__main__":
         time.sleep(1)
         queue_item = get_next_queue_request()
         if queue_item['queue_id'] != 'X':
-            request_data = {'queue_id': 'X'}
-            while request_data['queue_id'] == 'X':
-                request_data = send_request_to_dalle_engine(queue_item)
-                if request_data['queue_id'] == 'X':
-                    print("SCHEDULER: Error sending request to dalle engine, retrying...")
-                    time.sleep(1)
-
+            request_data = send_request_to_dalle_engine(queue_item)
             if request_data['success'] and request_data['queue_id'] == queue_item['queue_id']:
-                delete_request_from_redis_queue(queue_item)
                 update_library_catalogue()
                 print("SCHEDULER: Processing complete - library updated\n\n")
             else:
                 print("SCHEDULER: Request failed")
+
+            delete_request_from_redis_queue(queue_item)

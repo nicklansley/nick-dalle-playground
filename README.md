@@ -9,6 +9,7 @@ It is a simple, yet powerful, DALL-E emulator and incorporates a few extra featu
 * The backend is written in Python and the UI is written in JavaScript.
 * Output images are in PNG format.
 * You can decide the seed value from 0 to 2^32 (4294967296) for the random number generator. If you use the same number with the same prompt you'll get the same images out! If you use a seed of value 0 then the backend will choose a random seed value. Library page shows the seed that was chosen.
+* New '/advanced.html' with access to alter gen_top_k, gen_top_p, temperature, and condition_scale values.
 
 ## 10 steps to Fast-start
 1. Make sure you have an NVidia graphics card and a NVidia's GPU driver installed. This is how the backend will render the images.

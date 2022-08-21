@@ -99,6 +99,22 @@
         <td colspan="2"><input type="number" id="seed" min="0" max="4294967296" value="0">  (leave at zero for random seed)</td>
     </tr>
     <tr>
+        <td width="150"><hr>TOP P value:</td>
+        <td colspan="2"><input type="number" id="gen_top_p" min="0" max="1"  >  (a float between 0 and 1 - leave empty for 'no value')</td>
+    </tr>
+    <tr>
+        <td width="150"><hr>Enter a GEN TOP K value:</td>
+        <td colspan="2"><input type="number" id="gen_top_k" min="0" max="4294967296" >  (leave empty for 'no value')</td>
+    </tr>
+    <tr>
+        <td width="150"><hr>Enter a TEMPERATURE value:</td>
+        <td colspan="2"><input type="number" id="temperature" min="0" max="4294967296">  (leave at zero for 'no value')</td>
+    </tr>
+    <tr>
+        <td width="150"><hr>Enter an CONDITION SCALE:</td>
+        <td colspan="2"><input type="number" id="condition_scale" min="0" max="4294967296" value="20">  (leave at 20 for default value)</td>
+    </tr>
+    <tr>
         <td colspan="2">
             <button class="button-9" role="button" id="buttonGo" onclick="go()">Click to send request</button>
         </td>
@@ -120,7 +136,8 @@
     <tr>
         <td>
         <a class="label" target="_blank" rel="noopener noreferrer" href="library.html">See library of images created so far</a>
-        <a class="label" target="_blank" rel="noopener noreferrer" href="advanced.html">Prompt with advanced input controls</a>
+        <a class="label" target="_blank" rel="noopener noreferrer" href="index.html">Prompt with simple input controls</a>
+
         <a class="label" target="_blank" rel="noopener noreferrer" href="inspiration.html">Get inspired for your prompts</a>
         </td>
     </tr>
