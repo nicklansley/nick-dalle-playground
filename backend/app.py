@@ -13,7 +13,7 @@ from consts import COND_SCALE, GEN_TOP_K, GEN_TOP_P, TEMPERATURE, ModelSize
 
 app = Flask(__name__)
 CORS(app)
-print("--> Starting DALL-E Server. This might take up to five minutes.")
+print("--> Starting DALL-E Playground Server. This might take up to five minutes.")
 
 from dalle_model import DalleModel
 
