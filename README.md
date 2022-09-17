@@ -1,5 +1,10 @@
 # Nick's Dalle playground
 
+Note: This project is now archived. I've moved on to develop a web multi-user docker version of Stable Diffusion with its better imagery creation.
+https://github.com/nicklansley/nick-stable-diffusion
+
+Huge thanks to the amazing people behind Dalle-Mini / Craiyon who will go on to create a new version in time :-) 
+
 A playground for DALL-E enthusiasts to tinker with the open-source  [DALL-E Mini](https://github.com/borisdayma/dalle-mini).
 It is a simple, yet powerful, DALL-E emulator and incorporates a few extra features:
 * Scheduler and queue management of prompts, so the backend only processes one prompt at a time.
